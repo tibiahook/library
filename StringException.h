@@ -13,25 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef READONLYPACKET_H
-#define READONLYPACKET_H
+#ifndef STRINGEXCEPTION_H
+#define STRINGEXCEPTION_H
 
-#include <QByteArray>
-#include <QObject>
-#include <QString>
+#include <Exception.h>
 
-#include "Packet.h"
-
-class ReadOnlyPacket: public Packet {
+class StringException: public Exception {
 public:
-	ReadOnlyPacket(const QByteArray&);
-	ReadOnlyPacket(const quint8*, quint16);
+	StringException(const QString& message): message_(message) {}
 
-	quint16 length() const;
-	const quint8* data() const;
+	const QString& message() const { return message_; }
 
 private:
-	QByteArray raw_;
+	QString message_;
 };
 
 #endif
