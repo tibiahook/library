@@ -13,25 +13,38 @@
  * limitations under the License.
  */
 
-#ifndef READONLYPACKET_H
-#define READONLYPACKET_H
+#ifndef PACKETBUILDER_H
+#define PACKETBUILDER_H
 
 #include <QByteArray>
 #include <QObject>
 #include <QString>
 
+#include <PacketBuilderInterface.h>
+
 #include "Packet.h"
 
-class ReadOnlyPacket: public Packet {
+class PacketBuilder: public PacketBuilderInterface {
 public:
-	ReadOnlyPacket(const QByteArray&);
-	ReadOnlyPacket(const quint8*, quint16);
+    PacketBuilder();
+    PacketBuilder(const PacketInterface*);
+    PacketBuilder(const QByteArray&);
+    PacketBuilder(const quint8*, quint16 length);
 
-	quint16 length() const;
-	const quint8* data() const;
+    PacketInterface* build() const;
+
+    void writeU8(quint8);
+    void writeU16(quint16);
+    void writeU32(quint32);
+    void writeU64(quint64);
+    void writeString(const QString&);
 
 private:
-	QByteArray raw_;
+    void reserve(quint16);
+
+    QByteArray data_;
+    quint16 position_;
+    quint16 length_;
 };
 
 #endif
