@@ -26,7 +26,7 @@ bool DataQueue::empty() {
 }
 
 void DataQueue::enqueue(const QByteArray& data) {
-	QMutexLocker locker(&mutex_);
+    QMutexLocker locker(&mutex_);
 	queue_.enqueue(data);
 }
 
