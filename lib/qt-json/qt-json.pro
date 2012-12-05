@@ -1,6 +1,5 @@
-include(../lib.pri)
-
-TARGET = qtjson
+TEMPLATE = lib
+CONFIG += staticlib
 
 HEADERS += \
     src/json.h

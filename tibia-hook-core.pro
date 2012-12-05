@@ -1,18 +1,21 @@
-include(core.pri)
-
-TARGET = hook
-
 QT += core gui
 
 TEMPLATE = lib
-win32:CONFIG += dll
 
-DESTDIR = ../bin
-INCLUDEPATH += include ../lib/libdetours/src ../lib/libqtjson/src
+INCLUDEPATH += include lib/mologie-detours/src lib/qt-json/src
 
-LIBS += -L../lib -ldetours -lqtjson
+LIBS += \
+    -Llib/mologie-detours/release \
+    -Llib/qt-json/release \
+    -lmologie-detours \
+    -lqt-json
 
-unix:LIBS += -lpthread
+win32 {
+    CONFIG += exceptions dll
+    DEFINES += WIN32
+    DEFINES -= UNICODE
+    QMAKE_CXXFLAGS += -U__STRICT_ANSI__
+}
 
 SOURCES += \
     src/Application.cpp \
@@ -34,6 +37,8 @@ HEADERS += \
     src/Memory.h \
     src/ProxyReceiver.h \
     src/JsonSettings.h \
+    src/Logger.h \
+    src/UILogger.h \
     include/UIManagerInterface.h \
     include/SettingsInterface.h \
     include/Serialization.h \
@@ -54,9 +59,7 @@ HEADERS += \
     include/Direction.h \
     include/Constants.h \
     include/ProxyManagerInterface.h \
-    include/LoggerInterface.h \
-    src/Logger.h \
-    src/UILogger.h
+    include/LoggerInterface.h
 
 unix:SOURCES += \
     src/UnixEntry.cpp \

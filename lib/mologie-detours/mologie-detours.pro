@@ -1,6 +1,5 @@
-include(../lib.pri)
-
-TARGET = detours
+TEMPLATE = lib
+CONFIG += staticlib
 
 HEADERS += \
     src/hde.h \

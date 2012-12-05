@@ -36,7 +36,7 @@ DWORD WINAPI hook_thread(LPVOID) {
 	delete application;
 	application = NULL;
 
-    return NULL;
+    return 0;
 }
 
 LRESULT CALLBACK hook_callback(int nCode, WPARAM wParam, LPARAM lParam) {

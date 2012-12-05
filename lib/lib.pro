@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS = libdetours libqtjson
+SUBDIRS = mologie-detours qt-json

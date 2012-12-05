@@ -25,7 +25,7 @@
 
 bool JsonSettings::parse(const QString& json) {
 	bool parsed = true;
-    QVariant result = QtJson::Json::parse(json, parsed);
+    QVariant result = QtJson::parse(json, parsed);
     if (parsed) {
         values_ = result.toMap();
         return true;
