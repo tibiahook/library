@@ -62,14 +62,14 @@ public:
     PluginManager(HookInterface*);
     ~PluginManager();
 
-    void load(const QString&);
+    void load(const QList<QString>& pluginDirectories);
     void unload();
 
     QObject* findPluginByName(const QString& name);
-    QObject* findPluginByName(const QString& name, quint16 version);
+    QObject* findPluginByName(const QString& name, quint16 minVersion);
 
 private:
-    PluginInfo* loadPluginInfo(const QString& directory);
+    PluginInfo* loadPluginInfo(const QString& pluginDirectory);
 
     HookInterface* hook_;
     QString directory_;

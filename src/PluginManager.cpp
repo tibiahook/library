@@ -51,12 +51,12 @@ PluginManager::~PluginManager() {
     unload();
 }
 
-void PluginManager::load(const QString& directory) {
-    QFileInfoList plugins = QDir(directory).entryInfoList(QStringList(), QDir::Dirs);
-    foreach (const QFileInfo& plugin, plugins) {
-        PluginInfo* info = loadPluginInfo(plugin.absoluteFilePath());
+void PluginManager::load(const QList<QString>& pluginDirectories) {
+    foreach (const QString& pluginDirectory, pluginDirectories) {
+        PluginInfo* info = loadPluginInfo(pluginDirectory);
         if (info != NULL) {
             pluginInfos_.append(info);
+            qDebug() << "loaded plugin metadata: " << info->name();
         }
     }
 
@@ -117,14 +117,14 @@ void PluginManager::load(const QString& directory) {
         QObject* instance = loader.instance();
 
         if (instance == 0) {
-            // TODO Error message
+            qDebug() << "unable to load plugin: " << info->libraryPath() << loader.errorString();
             continue;
         }
 
         // Check if it is a valid plugin
         PluginInterface* plugin = qobject_cast<PluginInterface*>(instance);
         if (plugin == 0) {
-            // TODO Error message
+            qDebug() << "unable to convert plugin: " << info->libraryPath();
             continue;
         }
 
@@ -172,10 +172,10 @@ QObject* PluginManager::findPluginByName(const QString& name) {
     return NULL;
 }
 
-QObject* PluginManager::findPluginByName(const QString& name, quint16 version) {
+QObject* PluginManager::findPluginByName(const QString& name, quint16 minVersion) {
     for (PluginMap::iterator it = plugins_.begin(); it != plugins_.end(); ++it) {
         PluginInfo* info = it.key();
-        if(info->name().compare(name) == 0 && info->version() >= version) {
+        if(info->name().compare(name) == 0 && info->version() >= minVersion) {
             return it.value();
         }
     }

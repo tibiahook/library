@@ -15,7 +15,7 @@
 
 #include "Memory.h"
 
-MemoryLocation Memory::rebase(MemoryLocation address) {
+MemoryLocation Memory::rebase(MemoryLocation address) const {
     return Memory::staticRebase(address);
 }
 

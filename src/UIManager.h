@@ -21,7 +21,7 @@
 
 #include <UIManagerInterface.h>
 
-class UIManager: private QMainWindow, public UIManagerInterface {
+class UIManager: public QMainWindow, public UIManagerInterface {
 public:
     UIManager(QWidget* parent = NULL);
 

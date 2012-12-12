@@ -59,7 +59,7 @@ public:
     }
 
     void writeString(const QString& value) {
-        QByteArray array = value.toAscii();
+        QByteArray array = value.toLatin1();
         quint16 length = array.length();
 
         // Reserve header plus length bytes

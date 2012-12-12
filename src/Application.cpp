@@ -24,7 +24,7 @@
 
 #define SETTINGS_FILE "config.js"
 
-#define SETTINGS_PLUGINS_DIRECTORY "plugins"
+#define SETTINGS_PLUGIN_DIRECTORIES "plugins"
 #define SETTINGS_ADDRESSES "addresses"
 #define SETTINGS_ADDRESSES_IN_FUNCTION "inFunction"
 #define SETTINGS_ADDRESSES_IN_NEXT_FUNCTION "inNextFunction"
@@ -90,14 +90,20 @@ void Application::initialize() {
         uiLogger_ = new UILogger(&logger_);
         ui_->addTab(uiLogger_, "Log");
 
-        // Load the plugins directory
-        QVariant pluginsDir = settings_.value(SETTINGS_PLUGINS_DIRECTORY);
-        if (pluginsDir.type() != QVariant::String) {
-            throw std::runtime_error("Could not load plugins directory!");
+
+        // Load the plugin directories
+        if (!settings_.contains(SETTINGS_PLUGIN_DIRECTORIES)) {
+            throw std::runtime_error("Could not load plugin directories!");
+        }
+
+        QVariantList pluginDirectories = settings_.value(SETTINGS_PLUGIN_DIRECTORIES).toList();
+        QStringList pluginStrings;
+        foreach (const QVariant& pluginDirectory, pluginDirectories) {
+            pluginStrings += pluginDirectory.toString();
         }
 
         // Load plugins from the given plugins directory
-        plugins_.load(pluginsDir.toString());
+        plugins_.load(pluginStrings);
     }
     catch(std::exception& exception) {
         QMessageBox message;

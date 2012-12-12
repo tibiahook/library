@@ -1,14 +1,8 @@
 QT += core gui
 
 TEMPLATE = lib
-
-INCLUDEPATH += include lib/mologie-detours/src lib/qt-json/src
-
-LIBS += \
-    -Llib/mologie-detours/release \
-    -Llib/qt-json/release \
-    -lmologie-detours \
-    -lqt-json
+DESTDIR = bin
+TARGET = tibia-hook
 
 win32 {
     CONFIG += exceptions dll
@@ -16,6 +10,17 @@ win32 {
     DEFINES -= UNICODE
     QMAKE_CXXFLAGS += -U__STRICT_ANSI__
 }
+
+LIBS += \
+    -Llib/mologie-detours/bin \
+    -Llib/qt-json/bin \
+    -lmologie-detours \
+    -lqt-json
+
+INCLUDEPATH += \
+    include \
+    lib/mologie-detours/src \
+    lib/qt-json/src
 
 SOURCES += \
     src/Application.cpp \
@@ -69,7 +74,7 @@ win32:SOURCES += \
     src/WindowsEntry.cpp \
     src/WindowsMemory.cpp
 
-OTHER_FILES += config.js
+OTHER_FILES += files/config.js
 
 settings.path = $${DESTDIR}
 settings.files = $${OTHER_FILES}

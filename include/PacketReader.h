@@ -55,7 +55,7 @@ public:
         assert(has(length) && PACKET_END_OF_FILE);
 
         // The data contains the raw ASCII string
-        QString value = QString::fromAscii((const char*) (data_.data() + position_), length);
+        QString value = QString::fromLatin1((const char*) (data_.data() + position_), length);
         position_ += length;
         return value;
     }
