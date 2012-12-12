@@ -1,8 +1,13 @@
 QT += core gui
 
 TEMPLATE = lib
-DESTDIR = bin
 TARGET = tibia-hook
+
+DESTDIR = bin
+OBJECTS_DIR = $${DESTDIR}/.obj
+MOC_DIR = $${DESTDIR}/.moc
+RCC_DIR = $${DESTDIR}/.rcc
+UI_DIR = $${DESTDIR}/.ui
 
 win32 {
     CONFIG += exceptions dll
@@ -10,6 +15,8 @@ win32 {
     DEFINES -= UNICODE
     QMAKE_CXXFLAGS += -U__STRICT_ANSI__
 }
+
+QMAKE_CXXFLAGS_WARN_OFF += -Wmissing-field-initializers
 
 LIBS += \
     -Llib/mologie-detours/bin \
