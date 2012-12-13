@@ -27,14 +27,14 @@ Application* application = NULL;
   * This function runs when the thread is created. Qt runs in this thread.
   */
 DWORD WINAPI hook_thread(LPVOID) {
-	// Create the application and enter the main event loop
+    // Create the application and enter the main event loop
     application = new Application();
     application->initialize();
-	application->exec();
+    application->exec();
 
-	// When the application is done executing, clean up
-	delete application;
-	application = NULL;
+    // When the application is done executing, clean up
+    delete application;
+    application = NULL;
 
     return 0;
 }
@@ -45,16 +45,18 @@ LRESULT CALLBACK hook_callback(int nCode, WPARAM wParam, LPARAM lParam) {
         injected = true;
         thread_handle = CreateThread(NULL, 0, hook_thread, NULL, 0, &thread_id);
     }
-	return ::CallNextHookEx(NULL, nCode, wParam, lParam);
+    return ::CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 extern "C"
 {
-    /**
-      * This function runs when the library is injected.
-      */
-    __declspec(dllexport) void hook_constructor(HINSTANCE hMod, DWORD dwThreadId) {
-        ::SetWindowsHookEx(WH_GETMESSAGE, hook_callback, hMod, dwThreadId);
-        ::PostThreadMessage(dwThreadId, WM_NULL, 0, 0);
-    }
+
+/**
+  * This function runs when the library is injected.
+  */
+__declspec(dllexport) void hook_constructor(HINSTANCE hMod, DWORD dwThreadId) {
+    ::SetWindowsHookEx(WH_GETMESSAGE, hook_callback, hMod, dwThreadId);
+    ::PostThreadMessage(dwThreadId, WM_NULL, 0, 0);
+}
+
 }

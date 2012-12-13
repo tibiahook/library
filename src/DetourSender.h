@@ -34,7 +34,7 @@ public:
     }
 
     inline void sendToServer(const QByteArray& data) {
-       DetourManager::serverQueue()->enqueue(data);
+        DetourManager::serverQueue()->enqueue(data);
     }
 
     inline void sendToServer(const Packet& packet) {
@@ -42,7 +42,7 @@ public:
     }
 
 private:
-	DetourSender(const DetourSender&);
+    DetourSender(const DetourSender&);
     DetourSender& operator=(const DetourSender&);
 };
 

@@ -65,16 +65,16 @@ protected:
     quint16 position_;
 
 private:
-	template<typename T, int size>
+    template<typename T, int size>
     inline T peek() const {
         assert(has(size) && PACKET_END_OF_FILE);
         return *((T*) (data_.data() + position_));
     }
 
-	template<typename T, int size>
+    template<typename T, int size>
     inline T read() {
-		T value = peek<T, size>();
-		position_ += size;
+        T value = peek<T, size>();
+        position_ += size;
         return value;
     }
 };

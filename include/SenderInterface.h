@@ -21,7 +21,7 @@ class QByteArray;
 
 class SenderInterface {
 public:
-	virtual ~SenderInterface() {}
+    virtual ~SenderInterface() {}
 
     virtual void sendToClient(const QByteArray&) = 0;
     virtual void sendToClient(const Packet&) = 0;

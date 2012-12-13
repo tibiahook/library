@@ -26,7 +26,7 @@ public:
     QVariant value(const QString&) const;
 
 private:
-	QVariantMap values_;
+    QVariantMap values_;
 };
 
 #endif

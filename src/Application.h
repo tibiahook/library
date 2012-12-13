@@ -67,7 +67,7 @@ private:
 };
 
 class Application: public QApplication, public HookInterface {
-	static int argc_;
+    static int argc_;
 
 public:
     Application();
@@ -89,7 +89,7 @@ public:
     }
 
 private:
-	Application(const Application&);
+    Application(const Application&);
     Application& operator=(const Application&);
 
     Logger logger_;

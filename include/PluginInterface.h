@@ -26,7 +26,7 @@ public:
     virtual ~PluginInterface() {}
 
     virtual void install(HookInterface*, SettingsInterface*) throw(std::exception) = 0;
-	virtual void uninstall() = 0;
+    virtual void uninstall() = 0;
 };
 
 Q_DECLARE_INTERFACE(PluginInterface, "PluginInterface")

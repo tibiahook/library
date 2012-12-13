@@ -44,8 +44,8 @@ public:
     }
 
 private:
-	QQueue<QByteArray> queue_;
-	QMutex mutex_;
+    QQueue<QByteArray> queue_;
+    QMutex mutex_;
 };
 
 #endif

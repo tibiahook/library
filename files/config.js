@@ -3,6 +3,7 @@
         "plugins/plugin-minimap",
         "plugins/plugin-minimap-view",
         "plugins/plugin-path",
+        "plugins/plugin-scripting",
         "plugins/plugin-tracker",
         "plugins/plugin-walker",
     ],

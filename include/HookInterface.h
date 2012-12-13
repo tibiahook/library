@@ -27,7 +27,7 @@ class UIManagerInterface;
 
 class HookInterface {
 public:
-	virtual ~HookInterface() {}
+    virtual ~HookInterface() {}
 
     virtual LoggerInterface* logger() = 0;
     virtual MemoryInterface* memory() = 0;

@@ -20,7 +20,7 @@ class QByteArray;
 
 class ReceiverInterface {
 public:
-	virtual ~ReceiverInterface() {}
+    virtual ~ReceiverInterface() {}
 
     virtual bool receiveOutgoingMessage(const QByteArray&) = 0;
     virtual void receiveIncomingMessage(const QByteArray&) = 0;
