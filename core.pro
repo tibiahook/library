@@ -1,33 +1,22 @@
+include(../libraries.pri)
+
 QT += core gui
 
 TEMPLATE = lib
+CONFIG += dll
+
 TARGET = tibia-hook
 
-DESTDIR = bin
-OBJECTS_DIR = $${DESTDIR}/.obj
-MOC_DIR = $${DESTDIR}/.moc
-RCC_DIR = $${DESTDIR}/.rcc
-UI_DIR = $${DESTDIR}/.ui
-
-win32 {
-    CONFIG += exceptions dll
-    DEFINES += WIN32
-    DEFINES -= UNICODE
-    QMAKE_CXXFLAGS += -U__STRICT_ANSI__
-}
-
-QMAKE_CXXFLAGS_WARN_OFF += -Wmissing-field-initializers
-
 LIBS += \
-    -Llib/mologie-detours/bin \
-    -Llib/qt-json/bin \
-    -lmologie-detours \
-    -lqt-json
+    -L$${LIB_MOLOGIE_DETOURS_BIN_DIR} \
+    -L$${LIB_QT_JSON_BIN_DIR} \
+    -l$${LIB_MOLOGIE_DETOURS_BIN_NAME} \
+    -l$${LIB_QT_JSON_BIN_NAME}
 
 INCLUDEPATH += \
     include \
-    lib/mologie-detours/src \
-    lib/qt-json/src
+    $${LIB_MOLOGIE_DETOURS_SRC_DIR} \
+    $${LIB_QT_JSON_SRC_DIR}
 
 SOURCES += \
     src/Application.cpp \
@@ -81,12 +70,15 @@ win32:SOURCES += \
     src/WindowsEntry.cpp \
     src/WindowsMemory.cpp
 
-OTHER_FILES += files/config.js
+FORMS += \
+    src/UILogger.ui
+
+OTHER_FILES += \
+    files/config.js
+
+include(../shared.pri)
 
 settings.path = $${DESTDIR}
 settings.files = $${OTHER_FILES}
 
 INSTALLS += settings
-
-FORMS += \
-    src/UILogger.ui

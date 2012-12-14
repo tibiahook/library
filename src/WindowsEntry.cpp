@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <QDebug>
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -39,24 +41,19 @@ DWORD WINAPI hook_thread(LPVOID) {
     return 0;
 }
 
-LRESULT CALLBACK hook_callback(int nCode, WPARAM wParam, LPARAM lParam) {
+__declspec(dllexport) LRESULT CALLBACK hook_callback(int nCode, WPARAM wParam, LPARAM lParam) {
     static bool injected = false;
     if (!injected) {
         injected = true;
         thread_handle = CreateThread(NULL, 0, hook_thread, NULL, 0, &thread_id);
     }
-    return ::CallNextHookEx(NULL, nCode, wParam, lParam);
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
-
-extern "C"
-{
 
 /**
   * This function runs when the library is injected.
   */
-__declspec(dllexport) void hook_constructor(HINSTANCE hMod, DWORD dwThreadId) {
-    ::SetWindowsHookEx(WH_GETMESSAGE, hook_callback, hMod, dwThreadId);
-    ::PostThreadMessage(dwThreadId, WM_NULL, 0, 0);
-}
-
+extern "C" __declspec(dllexport) void hook_constructor(HINSTANCE hMod, DWORD dwThreadId) {
+    SetWindowsHookEx(WH_GETMESSAGE, hook_callback, hMod, dwThreadId);
+    PostThreadMessage(dwThreadId, WM_NULL, 0, 0);
 }

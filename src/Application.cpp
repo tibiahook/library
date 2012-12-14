@@ -22,17 +22,6 @@
 #include "Application.h"
 #include "DetourManager.h"
 
-#define SETTINGS_FILE "config.js"
-
-#define SETTINGS_PLUGIN_DIRECTORIES "plugins"
-#define SETTINGS_ADDRESSES "addresses"
-#define SETTINGS_ADDRESSES_IN_FUNCTION "inFunction"
-#define SETTINGS_ADDRESSES_IN_NEXT_FUNCTION "inNextFunction"
-#define SETTINGS_ADDRESSES_IN_STREAM "inStream"
-#define SETTINGS_ADDRESSES_OUT_FUNCTION "outFunction"
-#define SETTINGS_ADDRESSES_OUT_BUFFER_LENGTH "outBufferLength"
-#define SETTINGS_ADDRESSES_OUT_BUFFER "outBuffer"
-
 int Application::argc_ = 0;
 
 Application::Application():
@@ -67,11 +56,18 @@ void Application::initialize() {
             throw std::runtime_error("Could not load " SETTINGS_FILE "!");
         }
 
-        if (!settings_.contains(SETTINGS_ADDRESSES)) {
+        if (!settings_.contains(SETTINGS_VERSION)) {
+            throw std::runtime_error("Could not load version!");
+        }
+
+        QString version = settings_.value(SETTINGS_VERSION).toString();
+        QString addressesKey = QString(SETTINGS_ADDRESSES) + ":" + version;
+
+        if (!settings_.contains(addressesKey)) {
             throw std::runtime_error("Could not load addresses!");
         }
 
-        QVariantMap addressSettings = settings_.value(SETTINGS_ADDRESSES).toMap();
+        QVariantMap addressSettings = settings_.value(addressesKey).toMap();
         DetourManager::Addresses addresses;
         addresses.inFunction = addressSettings.value(SETTINGS_ADDRESSES_IN_FUNCTION).toUInt();
         addresses.inNextFunction = addressSettings.value(SETTINGS_ADDRESSES_IN_NEXT_FUNCTION).toUInt();

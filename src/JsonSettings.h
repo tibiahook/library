@@ -18,6 +18,18 @@
 
 #include <SettingsInterface.h>
 
+#define SETTINGS_FILE "config.js"
+
+#define SETTINGS_PLUGIN_DIRECTORIES "plugins"
+#define SETTINGS_VERSION "version"
+#define SETTINGS_ADDRESSES "addresses"
+#define SETTINGS_ADDRESSES_IN_FUNCTION "inFunction"
+#define SETTINGS_ADDRESSES_IN_NEXT_FUNCTION "inNextFunction"
+#define SETTINGS_ADDRESSES_IN_STREAM "inStream"
+#define SETTINGS_ADDRESSES_OUT_FUNCTION "outFunction"
+#define SETTINGS_ADDRESSES_OUT_BUFFER_LENGTH "outBufferLength"
+#define SETTINGS_ADDRESSES_OUT_BUFFER "outBuffer"
+
 class JsonSettings: public SettingsInterface {
 public:
     bool parse(const QString&);
