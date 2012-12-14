@@ -1,10 +1,18 @@
 {
     "plugins": [
+        "../plugin-minimap",
+        "../plugin-minimap-ui",
+        "../plugin-path",
+        "../plugin-tracker",
+        "../plugin-walker",
+    ],
+    "plugins:old": [
         "../plugin-battelist",
         "../plugin-channels",
         "../plugin-lua",
         "../plugin-minimap",
         "../plugin-minimap-view",
+        "../plugin-path",
         "../plugin-tracker",
         "../plugin-walker",
     ],

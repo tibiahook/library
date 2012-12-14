@@ -27,14 +27,10 @@ struct Position {
 
     quint16 x;
     quint16 y;
-    quint16 z;
-
-    Position operator+(const Position& rhs) const {
-        return Position(this->x + rhs.x, this->y + rhs.y, this->z + rhs.z);
-    }
+    quint8 z;
 
     Position operator+(const Direction& rhs) const {
-        Position moved(this->x, this->y, this->z);
+        Position moved(x, y, z);
         switch (rhs) {
         case NORTH: moved.y -= 1; break;
         case NORTHEAST: moved.y -= 1; moved.x += 1; break;
@@ -49,11 +45,15 @@ struct Position {
     }
 
     bool operator!=(const Position& rhs) const {
-        return this->x != rhs.x  || this->y != rhs.y || this->z != rhs.z;
+        return  x != rhs.x ||
+                y != rhs.y ||
+                z != rhs.z;
     }
 
     bool operator==(const Position& rhs) const {
-        return this->x == rhs.x  && this->y == rhs.y && this->z == rhs.z;
+        return  x == rhs.x &&
+                y == rhs.y &&
+                z == rhs.z;
     }
 };
 

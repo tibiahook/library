@@ -17,10 +17,15 @@
 #define DIRECTION_H
 
 enum Direction {
+    NONE = 0,
+
     NORTH = 1,
     EAST  = 2,
     SOUTH = 4,
-    WEST  = 8,
+    WEST = 8,
+
+    UP = 16,
+    DOWN = 32,
 
     NORTHEAST = NORTH | EAST,
     SOUTHEAST = SOUTH | EAST,

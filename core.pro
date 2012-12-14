@@ -1,5 +1,3 @@
-include(../libraries.pri)
-
 QT += core gui
 
 TEMPLATE = lib
@@ -7,6 +5,7 @@ CONFIG += dll
 
 TARGET = tibia-hook
 
+include(../libraries.pri)
 LIBS += \
     -L$${LIB_MOLOGIE_DETOURS_BIN_DIR} \
     -L$${LIB_QT_JSON_BIN_DIR} \
