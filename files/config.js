@@ -11,7 +11,7 @@
         "../plugin-channels",
         "../plugin-lua",
         "../plugin-minimap",
-        "../plugin-minimap-view",
+        "../plugin-minimap-ui",
         "../plugin-path",
         "../plugin-tracker",
         "../plugin-walker",

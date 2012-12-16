@@ -28,7 +28,7 @@
 
 class PacketBuilder {
 public:
-    PacketBuilder(quint16 length = DEFAULT_SIZE):
+    PacketBuilder(int length = DEFAULT_SIZE):
         data_(length, 0),
         position_(0),
         length_(0) {}
@@ -37,7 +37,7 @@ public:
         return Packet((const quint8*) data_.constData(), length_);
     }
 
-    inline void skip(quint16 count) {
+    inline void skip(int count) {
         reserve(count);
         position_ += count;
     }
@@ -76,11 +76,11 @@ public:
 
 private:
     QByteArray data_;
-    quint16 position_;
-    quint16 length_;
+    int position_;
+    int length_;
 
-    inline void reserve(quint16 size) {
-        quint16 newSize = position_ + size;
+    inline void reserve(int size) {
+        int newSize = position_ + size;
         if (data_.length() < newSize) {
             data_.resize(MAX(newSize, MIN_EXTEND_SIZE));
         }

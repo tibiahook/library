@@ -18,6 +18,8 @@
 
 #include <QtPlugin>
 
+#include <RuntimeError.h>
+
 class HookInterface;
 class SettingsInterface;
 
@@ -25,7 +27,7 @@ class PluginInterface {
 public:
     virtual ~PluginInterface() {}
 
-    virtual void install(HookInterface*, SettingsInterface*) throw(std::exception) = 0;
+    virtual void install(HookInterface*, SettingsInterface*) throw(RuntimeError) = 0;
     virtual void uninstall() = 0;
 };
 

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 #include <assert.h>
 #include <windows.h>
 #include <Tlhelp32.h>

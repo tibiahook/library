@@ -20,9 +20,8 @@
 #include <QMessageBox>
 #include <QPluginLoader>
 
-#include <stdexcept>
-
 #include <PluginInterface.h>
+#include <RuntimeError.h>
 
 #include "PluginManager.h"
 #include "JsonSettings.h"
@@ -67,7 +66,10 @@ void PluginManager::load(const QList<QString>& pluginDirectories) {
         for (PluginInfo::Dependencies::iterator depit = deps.begin(); depit != deps.end(); ++depit) {
             PluginInfo* dependency = findPluginInfoByName(pluginInfos_, depit->first, depit->second);
             if (dependency == NULL) {
-                throw std::runtime_error(("Could not load '" + (*it)->name() + "': unmet dependency '" + depit->first + "'[" + QString::number(depit->second) + "]!").toStdString());
+                throw RuntimeError(QString("Could not load '%1': unmet dependency '%2' [%3]!")
+                                   .arg((*it)->name())
+                                   .arg(depit->first)
+                                   .arg(depit->second));
             }
             dependencies.append(Dependency(*it, dependency));
         }
@@ -186,7 +188,7 @@ PluginInfo* PluginManager::loadPluginInfo(const QString& directory) {
     try {
         return new PluginInfo(directory);
     }
-    catch(std::runtime_error& error) {
+    catch(RuntimeError& error) {
         qWarning() << error.what();
     }
     return NULL;
@@ -196,7 +198,7 @@ PluginInfo::PluginInfo(const QString& directory) {
     QDir dir(directory);
     QStringList candidates = dir.entryList(QStringList() << PLUGIN_WILDCARD, QDir::Files | QDir::NoDotAndDotDot);
     if (candidates.length() == 0) {
-        throw std::runtime_error(("Could not load '" + directory + "': could not find shared library!").toStdString());
+        throw RuntimeError(QString("Could not load shared library in '%1'!").arg(directory));
     }
     libraryPath_ = dir.absoluteFilePath(candidates.first());
 
@@ -204,21 +206,21 @@ PluginInfo::PluginInfo(const QString& directory) {
     QString metaPath = dir.absoluteFilePath("meta.js");
     QFile metaFile(metaPath);
     if (!metaFile.exists()) {
-        throw std::runtime_error(("Could not load '" + metaPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not load '%1'!").arg(metaPath));
     }
     if (!metaFile.open(QIODevice::ReadOnly)) {
-        throw std::runtime_error(("Could not open '" + metaPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not open '%1'!").arg(metaPath));
     }
 
     JsonSettings meta;
     if (!meta.parse(metaFile.readAll())) {
-        throw std::runtime_error(("Could not parse '" + metaPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not parse '%1'!").arg(metaPath));
     }
     if (!meta.contains("name")) {
-        throw std::runtime_error(("Could not plugin name in '" + metaPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not load plugin name in '%1'!").arg(metaPath));
     }
     if (!meta.contains("version")) {
-        throw std::runtime_error(("Could not version name in '" + metaPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not load version in '%1'!").arg(metaPath));
     }
 
     name_ = meta.value("name").toString();
@@ -237,13 +239,13 @@ PluginInfo::PluginInfo(const QString& directory) {
     QString configPath = dir.absoluteFilePath("config.js");
     QFile configFile(configPath);
     if (!configFile.exists()) {
-        throw std::runtime_error(("Could not load '" + configPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not load '%1'!").arg(configPath));
     }
     if (!configFile.open(QIODevice::ReadOnly)) {
-        throw std::runtime_error(("Could not open '" + configPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not open '%1'!").arg(configPath));
     }
     if (!settings_.parse(configFile.readAll())) {
-        throw std::runtime_error(("Could not parse '" + configPath + "'!").toStdString());
+        throw RuntimeError(QString("Could not parse '%1'!").arg(configPath));
     }
 }
 

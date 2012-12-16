@@ -1,3 +1,5 @@
+QMAKE_CXXFLAGS += -std=c++0x
+
 QT += core gui
 
 TEMPLATE = lib
@@ -35,7 +37,6 @@ HEADERS += \
     src/PluginManager.h \
     src/ProxyManager.h \
     src/Memory.h \
-    src/ProxyReceiver.h \
     src/JsonSettings.h \
     src/Logger.h \
     src/UILogger.h \
@@ -43,8 +44,6 @@ HEADERS += \
     include/SettingsInterface.h \
     include/Serialization.h \
     include/SenderInterface.h \
-    include/ReceiverInterface.h \
-    include/ReadOnlyProxyInterface.h \
     include/ProxyInterface.h \
     include/Position.h \
     include/PluginManagerInterface.h \
@@ -59,7 +58,9 @@ HEADERS += \
     include/Direction.h \
     include/Constants.h \
     include/ProxyManagerInterface.h \
-    include/LoggerInterface.h
+    include/LoggerInterface.h \
+    include/RuntimeError.h \
+    include/Flags.h
 
 unix:SOURCES += \
     src/UnixEntry.cpp \

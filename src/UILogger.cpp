@@ -22,16 +22,19 @@ UILogger::UILogger(Logger* logger, QWidget* parent):
     setupUi(this);
 
     logTable_->setColumnCount(3);
-    logTable_->setHorizontalHeaderLabels(QStringList() << "Type" << "Tag" << "Message");
+    logTable_->setHorizontalHeaderLabels(QStringList() << "Tag" << "Message" << "Type");
 
     // Listen for log messages
-    QObject::connect(logger_, SIGNAL(logged(const Logger::Entry&)), this, SLOT(addLogMessage(const Logger::Entry&)), Qt::QueuedConnection);
+    QObject::connect(logger_, SIGNAL(entryAdded()), this, SLOT(logMessageAdded()), Qt::QueuedConnection);
 }
 
-void UILogger::addLogMessage(const Logger::Entry& entry) {
-    int rowIndex = logTable_->rowCount();
+void UILogger::logMessageAdded() {
+    const int loggerSize = logger_->size();
+    const Logger::Entry* entry = logger_->entryAt(loggerSize - 1);
+    const int rowIndex = logTable_->rowCount();
+
     logTable_->insertRow(rowIndex);
-    logTable_->setItem(rowIndex, 0, new QTableWidgetItem("Debug"));
-    logTable_->setItem(rowIndex, 1, new QTableWidgetItem(entry.tag));
-    logTable_->setItem(rowIndex, 2, new QTableWidgetItem(entry.message));
+    logTable_->setItem(rowIndex, 0, new QTableWidgetItem(entry->tag));
+    logTable_->setItem(rowIndex, 1, new QTableWidgetItem(entry->message));
+    logTable_->setItem(rowIndex, 2, new QTableWidgetItem("Debug"));
 }

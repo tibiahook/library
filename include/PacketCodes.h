@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,34 +18,31 @@
 
 #include <QtGlobal>
 
-namespace PacketCodes {
+enum PacketIn {
+    PacketInMapFull = 100,
+    PacketInMapTopRow = 101,
+    PacketInMapRightRow = 102,
+    PacketInMapBottomRow = 103,
+    PacketInMapLeftRow = 104,
 
-namespace In {
-const quint8 MapFull = 100,
-MapTopRow = 101,
-MapRightRow = 102,
-MapBottomRow = 103,
-MapLeftRow = 104,
+    PacketInFloorChangeUp = 190,
+    PacketInFloorChangeDown = 191,
 
-FloorChangeUp = 190,
-FloorChangeDown = 191,
+    PacketInSpeak = 170,
+    PacketInChannelList = 171,
+    PacketInChannelOpen = 172,
+    PacketInChannelOpenPrivate = 173,
+    PacketInChannelClose = 179,
 
-Speak = 170,
-ChannelList = 171,
-ChannelOpen = 172,
-ChannelOpenPrivate = 173,
-ChannelClose = 179,
-
-MoveNorth = 101,
-MoveNorthEast = 106,
-MoveEast = 102,
-MoveSouthEast = 107,
-MoveSouth = 103,
-MoveSouthWest = 108,
-MoveWest = 104,
-MoveNorthWest = 109;
-}
-
-}
+    PacketInMoveNorth = 101,
+    PacketInMoveNorthEast = 106,
+    PacketInMoveEast = 102,
+    PacketInMoveSouthEast = 107,
+    PacketInMoveSouth = 103,
+    PacketInMoveSouthWest = 108,
+    PacketInMoveWest = 104,
+    PacketInMoveNorthWest = 109,
+    PacketInMoveCancel = 181
+};
 
 #endif

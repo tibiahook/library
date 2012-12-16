@@ -13,21 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef PROXYMANAGERINTERFACE_H
-#define PROXYMANAGERINTERFACE_H
+#ifndef FLAGS_H
+#define FLAGS_H
 
 #include <QtGlobal>
 
-class PacketReader;
-class ProxyInterface;
+#define FLAG_INDEX(flag) (1 << (flag + 1))
 
-class ProxyManagerInterface {
+/**
+ * @brief The Flags class uses a quint64 to store the flags. A flag is a number in [0 .. 63].
+ */
+class Flags {
 public:
-    virtual void addOutgoingProxy(quint8 type, ProxyInterface* proxy) = 0;
-    virtual void removeOutgoingProxy(quint8 type, ProxyInterface* proxy) = 0;
+    inline void clear() {
+        flags_ = 0;
+    }
 
-    virtual void addIncomingProxy(quint8 type, ProxyInterface* proxy) = 0;
-    virtual void removeIncomingProxy(quint8 type, ProxyInterface* proxy) = 0;
+    inline void set(quint8 flag) {
+        flags_ |= FLAG_INDEX(flag);
+    }
+
+    inline bool test(quint8 flag) const {
+        return (flags_ & FLAG_INDEX(flag)) == FLAG_INDEX(flag);
+    }
+
+private:
+    quint64 flags_;
 };
 
 #endif

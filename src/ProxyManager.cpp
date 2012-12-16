@@ -16,31 +16,49 @@
 #include "PacketReader.h"
 #include "ProxyInterface.h"
 #include "ProxyManager.h"
-#include "ReadOnlyProxyInterface.h"
 
-bool ProxyManager::handleOutgoingPacket(PacketReader& reader) const {
-    quint8 type = reader.peekU8();
+bool ProxyManager::handleOutgoingPacket(const QByteArray& data) const {
+    if (data.length() <= 0) {
+        return true;
+    }
 
-    // Iterate all read-only proxies first
-    foreach (ReadOnlyProxyInterface* proxy, outgoingReadOnlyProxies_[type]) {
-        proxy->handlePacket(reader);
+    ProxyList proxies = outgoingProxies_[(quint8) data[0]];
+    if (proxies.length() == 0) {
+        return true;
     }
 
     // Iterate all proxies and stop when one returns false
-    foreach (ProxyInterface* proxy, outgoingProxies_[type]) {
+    PacketReader reader(data);
+    foreach (ProxyInterface* proxy, proxies) {
         if (!proxy->handlePacket(reader)) {
             return false;
         }
+
+        // Reset reader position after each handlePacket call
+        reader.setPosition(0);
     }
     return true;
 }
 
-bool ProxyManager::handleIncomingPacket(PacketReader& reader) const {
-    quint8 type = reader.peekU8();
+bool ProxyManager::handleIncomingPacket(const QByteArray& data) const {
+    if (data.length() <= 0) {
+        return true;
+    }
+
+    ProxyList proxies = incomingProxies_[(quint8) data[0]];
+    if (proxies.length() == 0) {
+        return true;
+    }
 
     // Iterate read-only proxies
-    foreach (ReadOnlyProxyInterface* proxy, incomingReadOnlyProxies_[type]) {
-        proxy->handlePacket(reader);
+    PacketReader reader(data);
+    foreach (ProxyInterface* proxy, proxies) {
+        if (!proxy->handlePacket(reader)) {
+            return false;
+        }
+
+        // Reset reader position after each handlePacket call
+        reader.setPosition(0);
     }
     return true;
 }
@@ -53,18 +71,10 @@ void ProxyManager::removeOutgoingProxy(quint8 type, ProxyInterface* proxy) {
     outgoingProxies_[type].removeAll(proxy);
 }
 
-void ProxyManager::addOutgoingReadOnlyProxy(quint8 type, ReadOnlyProxyInterface* proxy) {
-    outgoingReadOnlyProxies_[type].append(proxy);
+void ProxyManager::addIncomingProxy(quint8 type, ProxyInterface* proxy) {
+    incomingProxies_[type].append(proxy);
 }
 
-void ProxyManager::removeOutgoingReadOnlyProxy(quint8 type, ReadOnlyProxyInterface* proxy) {
-    outgoingReadOnlyProxies_[type].removeAll(proxy);
-}
-
-void ProxyManager::addIncomingReadOnlyProxy(quint8 type, ReadOnlyProxyInterface* proxy) {
-    incomingReadOnlyProxies_[type].append(proxy);
-}
-
-void ProxyManager::removeIncomingReadOnlyProxy(quint8 type, ReadOnlyProxyInterface* proxy) {
-    incomingReadOnlyProxies_[type].removeAll(proxy);
+void ProxyManager::removeIncomingProxy(quint8 type, ProxyInterface* proxy) {
+    incomingProxies_[type].removeAll(proxy);
 }

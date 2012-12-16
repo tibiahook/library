@@ -32,17 +32,24 @@ public:
         QString message;
     };
 
-    const QList<Entry>& entries() const {
-        return entries_;
+    Logger() {}
+
+    int size() const {
+        return entries_.size();
+    }
+
+    const Entry* entryAt(int index) const {
+        return entries_[index];
     }
 
     void log(Level level, const QString& tag, const QString& message) {
-        Entry entry;
-        entry.level = level;
-        entry.tag = tag;
-        entry.message = message;
+        Entry* entry = new Entry();
+        entry->level = level;
+        entry->tag = tag;
+        entry->message = message;
         entries_.append(entry);
-        emit logged(entry);
+
+        emit entryAdded();
     }
 
     void d(const QString& tag, const QString& message) { log(Debug, tag, message); }
@@ -52,10 +59,13 @@ public:
     void w(const QString& tag, const QString& message) { log(Warn, tag, message); }
 
 signals:
-    void logged(const Logger::Entry& entry);
+    void entryAdded();
 
 private:
-    QList<Entry> entries_;
+    Logger(const Logger&);
+    Logger& operator=(const Logger&);
+
+    QList<Entry*> entries_;
 };
 
 Q_DECLARE_METATYPE(Logger::Entry)

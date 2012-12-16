@@ -20,25 +20,25 @@
 #include <QByteArray>
 #include <QString>
 
-#include <assert.h>
-
 #include <Packet.h>
-
-#define PACKET_END_OF_FILE "reached the end of the buffer"
+#include <Position.h>
 
 class PacketReader {
 public:
-    PacketReader(const Packet& packet): data_(packet.data()), position_(0) {}
-    PacketReader(const QByteArray& data): data_(data), position_(0) {}
-    virtual ~PacketReader() {}
+    PacketReader(const Packet& packet):
+        data_(packet.data()),
+        position_(0) {}
+    PacketReader(const QByteArray& data):
+        data_(data),
+        position_(0) {}
 
     inline const QByteArray& data() const { return data_; }
 
-    inline quint16 position() const { return position_; }
-    inline void setPosition(quint16 position) { position_ = position; }
+    inline int position() const { return position_; }
+    inline void setPosition(int position) { position_ = position; }
 
-    inline void skip(quint16 count) { position_ += count; }
-    inline bool has(quint16 count) const { return data_.length() - position_ >= count; }
+    inline void skip(int count) { position_ += count; }
+    inline bool has(int count) const { return data_.length() - position_ >= count; }
 
     inline quint8 peekU8() const { return peek<quint8, 1>(); }
     inline quint16 peekU16() const { return peek<quint16, 2>(); }
@@ -50,24 +50,37 @@ public:
     inline quint32 readU32() { return read<quint32, 4>(); }
     inline quint64 readU64() { return read<quint64, 8>(); }
 
+    Position readPosition() {
+        Q_ASSERT(has(6));
+
+        Position position;
+        position.x = readU16();
+        position.y = readU16();
+        position.z = readU8();
+
+        return position;
+    }
+
     QString readString() {
         quint16 length = readU16();
-        assert(has(length) && PACKET_END_OF_FILE);
+
+        Q_ASSERT(has(length));
 
         // The data contains the raw ASCII string
         QString value = QString::fromLatin1((const char*) (data_.data() + position_), length);
+
         position_ += length;
         return value;
     }
 
 protected:
     const QByteArray data_;
-    quint16 position_;
+    int position_;
 
 private:
     template<typename T, int size>
     inline T peek() const {
-        assert(has(size) && PACKET_END_OF_FILE);
+        Q_ASSERT(has(size));
         return *((T*) (data_.data() + position_));
     }
 

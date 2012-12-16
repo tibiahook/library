@@ -23,11 +23,11 @@ class SenderInterface {
 public:
     virtual ~SenderInterface() {}
 
-    virtual void sendToClient(const QByteArray&) = 0;
-    virtual void sendToClient(const Packet&) = 0;
+    virtual void sendToClient(const QByteArray& data) = 0;
+    virtual void sendToClient(const Packet& data) = 0;
 
-    virtual void sendToServer(const QByteArray&) = 0;
-    virtual void sendToServer(const Packet&) = 0;
+    virtual void sendToServer(const QByteArray& data) = 0;
+    virtual void sendToServer(const Packet& data) = 0;
 };
 
 #endif

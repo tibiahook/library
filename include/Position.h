@@ -31,16 +31,28 @@ struct Position {
 
     Position operator+(const Direction& rhs) const {
         Position moved(x, y, z);
-        switch (rhs) {
-        case NORTH: moved.y -= 1; break;
-        case NORTHEAST: moved.y -= 1; moved.x += 1; break;
-        case EAST: moved.x += 1; break;
-        case SOUTHEAST: moved.y -= 1; moved.x += 1;  break;
-        case SOUTH: moved.y += 1; break;
-        case SOUTHWEST: moved.y -= 1; moved.x -= 1;  break;
-        case WEST: moved.x -= 1; break;
-        case NORTHWEST: moved.y -= 1; moved.x -= 1;  break;
+
+        if ((rhs & DirectionNorth) == DirectionNorth) {
+            moved.y -= 1;
         }
+        else if ((rhs & DirectionSouth) == DirectionSouth) {
+            moved.y += 1;
+        }
+
+        if ((rhs & DirectionEast) == DirectionEast) {
+            moved.x += 1;
+        }
+        else if ((rhs & DirectionWest) == DirectionWest) {
+            moved.x -= 1;
+        }
+
+        if ((rhs & DirectionUp) == DirectionUp) {
+            moved.z -= 1;
+        }
+        else if ((rhs & DirectionDown) == DirectionDown) {
+            moved.z += 1;
+        }
+
         return moved;
     }
 

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 #include <detours.h>
 
 #include "DetourManager.h"
@@ -91,7 +93,7 @@ int DetourManager::onIncomingNext() {
             quint32 position = stream->position - 1;
             quint32 length = stream->size - position;
 
-            serverHandler_->handle((const char*) (stream->buffer + position), length);
+            serverHandler_(QByteArray((const char*) (stream->buffer + position), length));
         }
         return command;
     }
@@ -103,7 +105,7 @@ int DetourManager::onIncomingNext() {
   */
 void DetourManager::onOutgoing(bool encrypt) {
     if (encrypt && clientHandler_ != NULL) {
-        clientHandler_->handle((const char*) outBufferPacketData_, (*outBufferLength_) - 8);
+        clientHandler_(QByteArray((const char*) outBufferPacketData_, (*outBufferLength_) - 8));
         return;
     }
     outFunctionDetour_->GetOriginalFunction()(encrypt);
@@ -111,8 +113,8 @@ void DetourManager::onOutgoing(bool encrypt) {
 
 /* Initialize static variables */
 
-BufferHandler* DetourManager::clientHandler_ = NULL;
-BufferHandler* DetourManager::serverHandler_ = NULL;
+DetourManager::DataHandler DetourManager::clientHandler_ = NULL;
+DetourManager::DataHandler DetourManager::serverHandler_ = NULL;
 
 bool DetourManager::sendingToClient_ = false;
 DataQueue DetourManager::clientQueue_;

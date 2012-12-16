@@ -15,32 +15,27 @@
 
 #include <QMessageBox>
 
-#include <stdexcept>
-
 #include <Position.h>
+#include <RuntimeError.h>
 
 #include "Application.h"
 #include "DetourManager.h"
 
-int Application::argc_ = 0;
+static int argc_ = 0;
 
 Application::Application():
-    QApplication(Application::argc_, NULL),
+    QApplication(argc_, NULL),
     settings_(),
     memory_(),
     sender_(),
     plugins_(this),
-    proxies_(),
-    receiver_(&proxies_),
-    clientBufferHandler_(&sender_, &receiver_),
-    serverBufferHandler_(&receiver_) {
+    proxies_() {
 
     QApplication::setApplicationName("Tibia Hook");
     QApplication::setApplicationVersion("beta");
     QApplication::setQuitOnLastWindowClosed(false);
 
     qRegisterMetaType<Position>("Position");
-    qRegisterMetaType<Logger::Entry>("Logger::Entry");
 }
 
 void Application::initialize() {
@@ -48,26 +43,27 @@ void Application::initialize() {
         // Try to load the configuration file
         QFile configFile(SETTINGS_FILE);
         if (!configFile.open(QFile::ReadOnly)) {
-            throw std::runtime_error("Could not open " SETTINGS_FILE "!");
+            throw RuntimeError("Could not open '" SETTINGS_FILE "'!");
         }
 
         // Try to parse the configuration file
         if (!settings_.parse(configFile.readAll())) {
-            throw std::runtime_error("Could not load " SETTINGS_FILE "!");
+            throw RuntimeError("Could not load '" SETTINGS_FILE "'!");
         }
 
-        if (!settings_.contains(SETTINGS_VERSION)) {
-            throw std::runtime_error("Could not load version!");
+        QVariant versionValue = settings_.value(SETTINGS_VERSION);
+        if (versionValue.type() != QVariant::String) {
+            throw RuntimeError("Could not load version!");
         }
 
-        QString version = settings_.value(SETTINGS_VERSION).toString();
+        QString version = versionValue.toString();
         QString addressesKey = QString(SETTINGS_ADDRESSES) + ":" + version;
-
-        if (!settings_.contains(addressesKey)) {
-            throw std::runtime_error("Could not load addresses!");
+        QVariant addressesValue = settings_.value(addressesKey);
+        if (addressesValue.type() != QVariant::Map) {
+            throw RuntimeError("Could not load addresses!");
         }
 
-        QVariantMap addressSettings = settings_.value(addressesKey).toMap();
+        QVariantMap addressSettings = addressesValue.toMap();
         DetourManager::Addresses addresses;
         addresses.inFunction = addressSettings.value(SETTINGS_ADDRESSES_IN_FUNCTION).toUInt();
         addresses.inNextFunction = addressSettings.value(SETTINGS_ADDRESSES_IN_NEXT_FUNCTION).toUInt();
@@ -77,8 +73,16 @@ void Application::initialize() {
         addresses.outBuffer = addressSettings.value(SETTINGS_ADDRESSES_OUT_BUFFER).toUInt();
 
         // Connect the DetourManager with the sender and receiver and install detours
-        DetourManager::setClientBufferHandler(&clientBufferHandler_);
-        DetourManager::setServerBufferHandler(&serverBufferHandler_);
+        DetourManager::setClientDataHandler([&proxies_, &sender_] (const QByteArray& data) {
+            if (proxies_.handleOutgoingPacket(data)) {
+                sender_.sendToServer(data);
+            }
+        });
+
+        DetourManager::setServerDataHandler([&proxies_] (const QByteArray& data) {
+            proxies_.handleIncomingPacket(data);
+        });
+
         DetourManager::install(addresses);
 
         // Create user interface
@@ -86,13 +90,13 @@ void Application::initialize() {
         uiLogger_ = new UILogger(&logger_);
         ui_->addTab(uiLogger_, "Log");
 
-
         // Load the plugin directories
-        if (!settings_.contains(SETTINGS_PLUGIN_DIRECTORIES)) {
-            throw std::runtime_error("Could not load plugin directories!");
+        QVariant pluginValue = settings_.value(SETTINGS_PLUGIN_DIRECTORIES);
+        if (pluginValue.type() != QVariant::List) {
+            throw RuntimeError("Could not load plugin directories!");
         }
 
-        QVariantList pluginDirectories = settings_.value(SETTINGS_PLUGIN_DIRECTORIES).toList();
+        QVariantList pluginDirectories = pluginValue.toList();
         QStringList pluginStrings;
         foreach (const QVariant& pluginDirectory, pluginDirectories) {
             pluginStrings += pluginDirectory.toString();
@@ -101,7 +105,7 @@ void Application::initialize() {
         // Load plugins from the given plugins directory
         plugins_.load(pluginStrings);
     }
-    catch(std::exception& exception) {
+    catch (RuntimeError& exception) {
         QMessageBox message;
         message.setWindowTitle(QApplication::applicationName());
         message.setText("Something terrible has happened!");
@@ -121,6 +125,6 @@ Application::~Application() {
 
     // And finally unload detours
     DetourManager::uninstall();
-    DetourManager::setServerBufferHandler(NULL);
-    DetourManager::setClientBufferHandler(NULL);
+    DetourManager::setServerDataHandler(NULL);
+    DetourManager::setClientDataHandler(NULL);
 }

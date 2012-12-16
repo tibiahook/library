@@ -22,7 +22,7 @@ class ProxyInterface {
 public:
     virtual ~ProxyInterface() {}
 
-    virtual bool handlePacket(const PacketReader&) = 0;
+    virtual bool handlePacket(PacketReader& reader) = 0;
 };
 
 #endif

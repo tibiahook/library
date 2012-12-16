@@ -27,7 +27,7 @@ public:
     UILogger(Logger*, QWidget* = 0);
 
 private slots:
-    void addLogMessage(const Logger::Entry&);
+    void logMessageAdded();
 
 private:
     Logger* logger_;

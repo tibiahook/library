@@ -13,21 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef PROXYMANAGERINTERFACE_H
-#define PROXYMANAGERINTERFACE_H
+#ifndef RUNTIMEERROR_H
+#define RUNTIMEERROR_H
 
 #include <QtGlobal>
+#include <QString>
 
-class PacketReader;
-class ProxyInterface;
+#include <stdexcept>
 
-class ProxyManagerInterface {
+class RuntimeError: public std::runtime_error {
 public:
-    virtual void addOutgoingProxy(quint8 type, ProxyInterface* proxy) = 0;
-    virtual void removeOutgoingProxy(quint8 type, ProxyInterface* proxy) = 0;
-
-    virtual void addIncomingProxy(quint8 type, ProxyInterface* proxy) = 0;
-    virtual void removeIncomingProxy(quint8 type, ProxyInterface* proxy) = 0;
+    RuntimeError(const QString& message):
+        std::runtime_error(message.toStdString()) {}
 };
 
 #endif

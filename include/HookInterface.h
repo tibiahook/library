@@ -20,7 +20,6 @@ class LoggerInterface;
 class MemoryInterface;
 class SenderInterface;
 class SettingsInterface;
-class ReceiverInterface;
 class PluginManagerInterface;
 class ProxyManagerInterface;
 class UIManagerInterface;
@@ -33,7 +32,6 @@ public:
     virtual MemoryInterface* memory() = 0;
     virtual PluginManagerInterface* plugins() = 0;
     virtual ProxyManagerInterface* proxies() = 0;
-    virtual ReceiverInterface* receiver() = 0;
     virtual SenderInterface* sender() = 0;
     virtual SettingsInterface* settings() = 0;
     virtual UIManagerInterface* ui() = 0;

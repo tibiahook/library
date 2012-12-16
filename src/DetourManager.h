@@ -21,6 +21,8 @@
 #include "DataQueue.h"
 #include "Memory.h"
 
+#include <functional>
+
 #ifdef Q_WS_WIN
 
 #include <windows.h>
@@ -60,11 +62,6 @@ namespace MologieDetours {
 template <typename function_type> class Detour;
 }
 
-class BufferHandler {
-public:
-    virtual void handle(const char* buffer, quint32 length) = 0;
-};
-
 class Hook;
 class DetourManager {
     typedef LOOP_FUNCTION_RETURN_TYPE LoopSignature(LOOP_FUNCTION_PARAMETERS);
@@ -90,14 +87,16 @@ public:
         MemoryLocation outBuffer;
     };
 
+    typedef std::function<void (const QByteArray&)> DataHandler;
+
     static void install(const Addresses& settings);
     static void uninstall();
 
-    static void setClientBufferHandler(BufferHandler* clientHandler) {
+    static void setClientDataHandler(DataHandler clientHandler) {
         clientHandler_ = clientHandler;
     }
 
-    static void setServerBufferHandler(BufferHandler* serverHandler) {
+    static void setServerDataHandler(DataHandler serverHandler) {
         serverHandler_ = serverHandler;
     }
 
@@ -113,8 +112,8 @@ private:
     DetourManager();
     ~DetourManager();
 
-    static BufferHandler* clientHandler_;
-    static BufferHandler* serverHandler_;
+    static DataHandler clientHandler_;
+    static DataHandler serverHandler_;
 
     static bool sendingToClient_;
     static DataQueue clientQueue_;

@@ -16,32 +16,31 @@
 #ifndef PROXYMANAGER_H
 #define PROXYMANAGER_H
 
+#include <QtGlobal>
+#include <QByteArray>
 #include <QList>
 
-#include "ProxyManagerInterface.h"
+#include <ProxyManagerInterface.h>
 
-class ReadOnlyProxyInterface;
 class PacketReader;
 class ProxyInterface;
 
 class ProxyManager: public ProxyManagerInterface {
+    typedef QList<ProxyInterface*> ProxyList;
+
 public:
-    bool handleOutgoingPacket(PacketReader& reader) const;
-    bool handleIncomingPacket(PacketReader& reader) const;
+    bool handleOutgoingPacket(const QByteArray&) const;
+    bool handleIncomingPacket(const QByteArray&) const;
 
     void addOutgoingProxy(quint8, ProxyInterface*);
     void removeOutgoingProxy(quint8, ProxyInterface*);
 
-    void addOutgoingReadOnlyProxy(quint8, ReadOnlyProxyInterface*);
-    void removeOutgoingReadOnlyProxy(quint8, ReadOnlyProxyInterface*);
-
-    void addIncomingReadOnlyProxy(quint8, ReadOnlyProxyInterface*);
-    void removeIncomingReadOnlyProxy(quint8, ReadOnlyProxyInterface*);
+    void addIncomingProxy(quint8, ProxyInterface*);
+    void removeIncomingProxy(quint8, ProxyInterface*);
 
 private:
-    QList<ProxyInterface*> outgoingProxies_[256];
-    QList<ReadOnlyProxyInterface*> outgoingReadOnlyProxies_[256];
-    QList<ReadOnlyProxyInterface*> incomingReadOnlyProxies_[256];
+    ProxyList outgoingProxies_[256];
+    ProxyList incomingProxies_[256];
 };
 
 #endif

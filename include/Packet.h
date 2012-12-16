@@ -22,9 +22,9 @@
 class Packet {
 public:
     Packet(const QByteArray& data): raw_(data) {}
-    Packet(const quint8* buffer, quint16 length): raw_((const char*) buffer, length) {}
+    Packet(const quint8* buffer, int length): raw_((const char*) buffer, length) {}
 
-    quint16 length() const {
+    int length() const {
         return raw_.length();
     }
 
