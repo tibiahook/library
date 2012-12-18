@@ -39,8 +39,10 @@ public:
     void removeIncomingProxy(quint8, ProxyInterface*);
 
 private:
-    ProxyList outgoingProxies_[256];
-    ProxyList incomingProxies_[256];
+    static bool handlePacket(const QByteArray& data, const ProxyList* proxies);
+
+    ProxyList outgoingProxyLists_[256];
+    ProxyList incomingProxyLists_[256];
 };
 
 #endif

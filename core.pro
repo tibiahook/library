@@ -60,7 +60,7 @@ HEADERS += \
     include/ProxyManagerInterface.h \
     include/LoggerInterface.h \
     include/RuntimeError.h \
-    include/Flags.h
+    include/ConcurrentProxy.h
 
 unix:SOURCES += \
     src/UnixEntry.cpp \

@@ -34,11 +34,13 @@ public:
 
     inline const QByteArray& data() const { return data_; }
 
+    inline int length() const { return data_.length(); }
+
     inline int position() const { return position_; }
     inline void setPosition(int position) { position_ = position; }
 
     inline void skip(int count) { position_ += count; }
-    inline bool has(int count) const { return data_.length() - position_ >= count; }
+    inline bool has(int count) const { return length() - position_ >= count; }
 
     inline quint8 peekU8() const { return peek<quint8, 1>(); }
     inline quint16 peekU16() const { return peek<quint16, 2>(); }
@@ -81,6 +83,7 @@ private:
     template<typename T, int size>
     inline T peek() const {
         Q_ASSERT(has(size));
+
         return *((T*) (data_.data() + position_));
     }
 

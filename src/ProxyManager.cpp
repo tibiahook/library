@@ -13,68 +13,60 @@
  * limitations under the License.
  */
 
+#include <QDebug>
+
 #include "PacketReader.h"
 #include "ProxyInterface.h"
 #include "ProxyManager.h"
 
-bool ProxyManager::handleOutgoingPacket(const QByteArray& data) const {
+bool ProxyManager::handlePacket(const QByteArray& data, const ProxyList* proxyLists) {
     if (data.length() <= 0) {
         return true;
     }
 
-    ProxyList proxies = outgoingProxies_[(quint8) data[0]];
-    if (proxies.length() == 0) {
+    ProxyList proxyList = proxyLists[(quint8) data[0]];
+    if (proxyList.length() == 0) {
         return true;
     }
 
     // Iterate all proxies and stop when one returns false
     PacketReader reader(data);
-    foreach (ProxyInterface* proxy, proxies) {
-        if (!proxy->handlePacket(reader)) {
-            return false;
+    foreach (ProxyInterface* proxy, proxyList) {
+        try {
+            if (!proxy->handlePacket(reader)) {
+                return false;
+            }
+        }
+        catch (std::exception& exception) {
+            qDebug() << "unhandled exception in proxy";
         }
 
         // Reset reader position after each handlePacket call
         reader.setPosition(0);
     }
     return true;
+}
+
+bool ProxyManager::handleOutgoingPacket(const QByteArray& data) const {
+    return handlePacket(data, outgoingProxyLists_);
 }
 
 bool ProxyManager::handleIncomingPacket(const QByteArray& data) const {
-    if (data.length() <= 0) {
-        return true;
-    }
-
-    ProxyList proxies = incomingProxies_[(quint8) data[0]];
-    if (proxies.length() == 0) {
-        return true;
-    }
-
-    // Iterate read-only proxies
-    PacketReader reader(data);
-    foreach (ProxyInterface* proxy, proxies) {
-        if (!proxy->handlePacket(reader)) {
-            return false;
-        }
-
-        // Reset reader position after each handlePacket call
-        reader.setPosition(0);
-    }
-    return true;
+    return handlePacket(data, incomingProxyLists_);
 }
 
 void ProxyManager::addOutgoingProxy(quint8 type, ProxyInterface* proxy) {
-    outgoingProxies_[type].append(proxy);
+    outgoingProxyLists_[type].append(proxy);
 }
 
 void ProxyManager::removeOutgoingProxy(quint8 type, ProxyInterface* proxy) {
-    outgoingProxies_[type].removeAll(proxy);
+    outgoingProxyLists_[type].removeAll(proxy);
 }
 
 void ProxyManager::addIncomingProxy(quint8 type, ProxyInterface* proxy) {
-    incomingProxies_[type].append(proxy);
+    incomingProxyLists_[type].append(proxy);
 }
 
 void ProxyManager::removeIncomingProxy(quint8 type, ProxyInterface* proxy) {
-    incomingProxies_[type].removeAll(proxy);
+    incomingProxyLists_[type].removeAll(proxy);
 }

@@ -19,6 +19,8 @@
 #include <QtGlobal>
 
 enum PacketIn {
+    PacketInitialGame = 10,
+
     PacketInMapFull = 100,
     PacketInMapTopRow = 101,
     PacketInMapRightRow = 102,
@@ -42,7 +44,9 @@ enum PacketIn {
     PacketInMoveSouthWest = 108,
     PacketInMoveWest = 104,
     PacketInMoveNorthWest = 109,
-    PacketInMoveCancel = 181
+    PacketInMoveCancel = 181,
+
+    PacketOutUseItem = 130
 };
 
 #endif
