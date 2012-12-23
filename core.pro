@@ -74,7 +74,7 @@ FORMS += \
     src/UILogger.ui
 
 OTHER_FILES += \
-    files/config.js
+    files/config.json
 
 include(../shared.pri)
 

@@ -203,7 +203,7 @@ PluginInfo::PluginInfo(const QString& directory) {
     libraryPath_ = dir.absoluteFilePath(candidates.first());
 
     // Load metadata
-    QString metaPath = dir.absoluteFilePath("meta.js");
+    QString metaPath = dir.absoluteFilePath("meta.json");
     QFile metaFile(metaPath);
     if (!metaFile.exists()) {
         throw RuntimeError(QString("Could not load '%1'!").arg(metaPath));
@@ -236,7 +236,7 @@ PluginInfo::PluginInfo(const QString& directory) {
     }
 
     // Load config
-    QString configPath = dir.absoluteFilePath("config.js");
+    QString configPath = dir.absoluteFilePath("config.json");
     QFile configFile(configPath);
     if (!configFile.exists()) {
         throw RuntimeError(QString("Could not load '%1'!").arg(configPath));

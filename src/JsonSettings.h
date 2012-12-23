@@ -18,7 +18,7 @@
 
 #include <SettingsInterface.h>
 
-#define SETTINGS_FILE "config.js"
+#define SETTINGS_FILE "config.json"
 
 #define SETTINGS_PLUGIN_DIRECTORIES "plugins"
 #define SETTINGS_VERSION "version"

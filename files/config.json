@@ -1,7 +1,10 @@
 {
     "plugins": [
-        "../plugin-game",
-        "../plugin-items",
+        "../plugin-minimap",
+        "../plugin-minimap-ui",
+        "../plugin-path",
+        "../plugin-tracker",
+        "../plugin-walker",
     ],
     "plugins:old": [
         "../plugin-battelist",
@@ -13,16 +16,8 @@
         "../plugin-tracker",
         "../plugin-walker",
     ],
-    "version": "980",
-    "addresses:971": {
-        "inFunction": 4620176,
-        "inNextFunction": 5352640,
-        "inStream": 10310548,
-        "outFunction": 5350096,
-        "outBufferLength": 10310568,
-        "outBuffer": 8105400
-    },
-    "addresses:980": {
+    "version": "981",
+    "addresses:981": {
         "inFunction": 4623312,
         "inNextFunction": 5357280,
         "inStream": 10331636,
