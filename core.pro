@@ -7,17 +7,7 @@ CONFIG += dll
 
 TARGET = tibia-hook
 
-include(../libraries.pri)
-LIBS += \
-    -L$${LIB_MOLOGIE_DETOURS_BIN_DIR} \
-    -L$${LIB_QT_JSON_BIN_DIR} \
-    -l$${LIB_MOLOGIE_DETOURS_BIN_NAME} \
-    -l$${LIB_QT_JSON_BIN_NAME}
-
-INCLUDEPATH += \
-    include \
-    $${LIB_MOLOGIE_DETOURS_SRC_DIR} \
-    $${LIB_QT_JSON_SRC_DIR}
+INCLUDEPATH += include $${LIB_MOLOGIE_DETOURS_SRC_DIR}
 
 SOURCES += \
     src/Application.cpp \
@@ -75,6 +65,9 @@ FORMS += \
 
 OTHER_FILES += \
     files/config.json
+
+include(../mologie-detours/mologie-detours.pri)
+include(../qt-json/qt-json.pri)
 
 include(../shared.pri)
 

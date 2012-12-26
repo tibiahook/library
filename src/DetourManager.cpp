@@ -15,9 +15,15 @@
 
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
+#include <QDebug>
+
 #include <detours.h>
 
 #include "DetourManager.h"
+
+#ifndef Q_OS_WIN
+#include <dlfcn.h>
+#endif
 
 void DetourManager::install(const Addresses& addresses) {
 #ifdef Q_OS_WIN
@@ -27,17 +33,17 @@ void DetourManager::install(const Addresses& addresses) {
     // Detour the peekMessage function
     loopDetour_ = new MologieDetours::Detour<LoopSignature*>((LoopSignature*) peekMessage, &DetourManager::onLoop);
 #else
-    loopDetour_ = new MologieDetours::Detour<LoopSignature*>((LoopSignature*) LOOP_FUNCTION_ADDRESS, &DetourManager::onLoop);
+    loopDetour_ = new MologieDetours::Detour<LoopSignature*>((LoopSignature*) dlsym(RTLD_NEXT, "XPending"), &DetourManager::onLoop);
 #endif
 
     inNextFunctionDetour_ = new MologieDetours::Detour<IncomingNextFunctionSignature*>((IncomingNextFunctionSignature*) Memory::staticRebase(addresses.inNextFunction), &DetourManager::onIncomingNext);
     inFunction_ = (IncomingFunctionSignature*) Memory::staticRebase(addresses.inFunction);
     inStream_ = (ParseStream*) Memory::staticRebase(addresses.inStream);
 
-    outFunctionDetour_ = new MologieDetours::Detour<OutgoingFunctionSignature*>((OutgoingFunctionSignature*) Memory::staticRebase(addresses.outFunction), &DetourManager::onOutgoing);
+    /*outFunctionDetour_ = new MologieDetours::Detour<OutgoingFunctionSignature*>((OutgoingFunctionSignature*) Memory::staticRebase(addresses.outFunction), &DetourManager::onOutgoing);
     outBufferLength_ = (quint32*) Memory::staticRebase(addresses.outBufferLength);
     outBufferPacketChecksum_ = (quint8*) Memory::staticRebase(addresses.outBuffer);
-    outBufferPacketData_ = (quint8*) (Memory::staticRebase(addresses.outBuffer) + 8);
+    outBufferPacketData_ = (quint8*) (Memory::staticRebase(addresses.outBuffer) + 8);*/
 }
 
 void DetourManager::uninstall() {
@@ -86,6 +92,7 @@ LOOP_FUNCTION_RETURN_TYPE DetourManager::onLoop(LOOP_FUNCTION_PARAMETERS) {
   * This function gets called in the Tibia thread.
   */
 int DetourManager::onIncomingNext() {
+    qDebug() << "DetourManager::onIncomingNext";
     if (!sendingToClient_ && serverHandler_ != NULL) {
         int command = inNextFunctionDetour_->GetOriginalFunction()();
         if (command != -1) {

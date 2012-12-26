@@ -49,7 +49,6 @@
 
 #else
 
-#define LOOP_FUNCTION_ADDRESS 0x0804c8f4 // XPending
 #define LOOP_FUNCTION_RETURN_TYPE int
 #define LOOP_FUNCTION_RETURN(value) return value
 #define LOOP_FUNCTION_ARG_NAME1 display

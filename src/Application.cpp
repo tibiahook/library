@@ -57,7 +57,8 @@ void Application::initialize() {
         }
 
         QString version = versionValue.toString();
-        QString addressesKey = QString(SETTINGS_ADDRESSES) + ":" + version;
+
+        QString addressesKey = QString(SETTINGS_ADDRESSES);
         QVariant addressesValue = settings_.value(addressesKey);
         if (addressesValue.type() != QVariant::Map) {
             throw RuntimeError("Could not load addresses!");
@@ -73,13 +74,13 @@ void Application::initialize() {
         addresses.outBuffer = addressSettings.value(SETTINGS_ADDRESSES_OUT_BUFFER).toUInt();
 
         // Connect the DetourManager with the sender and receiver and install detours
-        DetourManager::setClientDataHandler([&proxies_, &sender_] (const QByteArray& data) {
+        DetourManager::setClientDataHandler([this] (const QByteArray& data) {
             if (proxies_.handleOutgoingPacket(data)) {
                 sender_.sendToServer(data);
             }
         });
 
-        DetourManager::setServerDataHandler([&proxies_] (const QByteArray& data) {
+        DetourManager::setServerDataHandler([this] (const QByteArray& data) {
             proxies_.handleIncomingPacket(data);
         });
 

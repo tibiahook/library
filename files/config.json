@@ -1,7 +1,6 @@
 {
     "plugins": [
         "../plugin-minimap",
-        "../plugin-minimap-ui",
         "../plugin-path",
         "../plugin-tracker",
         "../plugin-walker",
@@ -9,7 +8,6 @@
     "plugins:old": [
         "../plugin-battelist",
         "../plugin-channels",
-        "../plugin-lua",
         "../plugin-minimap",
         "../plugin-minimap-ui",
         "../plugin-path",
@@ -17,12 +15,20 @@
         "../plugin-walker",
     ],
     "version": "981",
-    "addresses:981": {
+    "win32:addresses": {
         "inFunction": 4623312,
         "inNextFunction": 5357280,
         "inStream": 10331636,
         "outFunction": 5354736,
-        "outBufferLength": 10331656,
-        "outBuffer": 8117720
+        "outBuffer": 8117720,
+        "outBufferLength": 10331656
+    },
+    "unix:addresses": {
+        "inFunction": 135594976,
+        "inNextFunction": 137387680,
+        "inStream": 140370096,
+        "outFunction": 137341168,
+        "outBuffer": 140351616,
+        "outBufferLength": 140353672
     }
 }
