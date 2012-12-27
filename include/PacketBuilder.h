@@ -74,6 +74,10 @@ public:
         length_ = MAX(length_, position_);
     }
 
+    const QByteArray& data() {
+        return data_;
+    }
+
 private:
     QByteArray data_;
     int position_;

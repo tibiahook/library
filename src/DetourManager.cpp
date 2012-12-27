@@ -40,10 +40,10 @@ void DetourManager::install(const Addresses& addresses) {
     inFunction_ = (IncomingFunctionSignature*) Memory::staticRebase(addresses.inFunction);
     inStream_ = (ParseStream*) Memory::staticRebase(addresses.inStream);
 
-    /*outFunctionDetour_ = new MologieDetours::Detour<OutgoingFunctionSignature*>((OutgoingFunctionSignature*) Memory::staticRebase(addresses.outFunction), &DetourManager::onOutgoing);
+    outFunctionDetour_ = new MologieDetours::Detour<OutgoingFunctionSignature*>((OutgoingFunctionSignature*) Memory::staticRebase(addresses.outFunction), &DetourManager::onOutgoing);
     outBufferLength_ = (quint32*) Memory::staticRebase(addresses.outBufferLength);
     outBufferPacketChecksum_ = (quint8*) Memory::staticRebase(addresses.outBuffer);
-    outBufferPacketData_ = (quint8*) (Memory::staticRebase(addresses.outBuffer) + 8);*/
+    outBufferPacketData_ = (quint8*) (Memory::staticRebase(addresses.outBuffer) + 8);
 }
 
 void DetourManager::uninstall() {
@@ -92,7 +92,6 @@ LOOP_FUNCTION_RETURN_TYPE DetourManager::onLoop(LOOP_FUNCTION_PARAMETERS) {
   * This function gets called in the Tibia thread.
   */
 int DetourManager::onIncomingNext() {
-    qDebug() << "DetourManager::onIncomingNext";
     if (!sendingToClient_ && serverHandler_ != NULL) {
         int command = inNextFunctionDetour_->GetOriginalFunction()();
         if (command != -1) {
