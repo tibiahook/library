@@ -4,23 +4,6 @@ QT += core gui widgets
 TEMPLATE = lib
 CONFIG += c++11 dll
 
-win32 {
-    CONFIG += exceptions rtti
-    DEFINES += WIN32
-    DEFINES -= UNICODE
-    QMAKE_CXXFLAGS += -U__STRICT_ANSI__
-}
-
-OUTPUTDIR = $$PWD
-
-unix:DESTDIR=$${OUTPUTDIR}/build-unix/$${TARGET}
-win32:DESTDIR=$${OUTPUTDIR}/build-win32/$${TARGET}
-
-OBJECTS_DIR = $${DESTDIR}/obj
-MOC_DIR = $${DESTDIR}/moc
-RCC_DIR = $${DESTDIR}/rcc
-UI_DIR = $${DESTDIR}/ui
-
 INCLUDEPATH += include ../api/
 
 DEFINES += LIBRARY_DEBUG
@@ -54,8 +37,4 @@ OTHER_FILES += \
     files/config.json
 
 include(lib/mologie-detours/mologie-detours.pri)
-
-settings.path = $${DESTDIR}
-settings.files = $${OTHER_FILES}
-
-INSTALLS += settings
+include(../tibia-hook.pri)

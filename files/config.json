@@ -1,10 +1,10 @@
 {
     "plugins": [
-        "../../../plugins/build-win32/plugin-minimap",
-        "../../../plugins/build-win32/plugin-minimap-ui",
-        "../../../plugins/build-win32/plugin-path",
-        "../../../plugins/build-win32/plugin-tracker",
-        "../../../plugins/build-win32/plugin-walker"
+        "../plugin-minimap",
+        "../plugin-minimap-ui",
+        "../plugin-path",
+        "../plugin-tracker",
+        "../plugin-walker"
     ],
     "version": "981",
     "win32:addresses": {
