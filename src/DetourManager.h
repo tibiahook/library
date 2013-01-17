@@ -18,12 +18,12 @@
 
 #include <QtGlobal>
 
-#include "DataQueue.h"
+#include "SafeQueue.h"
 #include "Memory.h"
 
 #include <functional>
 
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
 
 #include <windows.h>
 
@@ -46,6 +46,7 @@
     UINT LOOP_FUNCTION_ARG_NAME3, \
     UINT LOOP_FUNCTION_ARG_NAME4, \
     UINT LOOP_FUNCTION_ARG_NAME5
+#define LOOP_FUNCTION_PARAMETERS_NO_NAMES LPMSG, HWND,  UINT, UINT,  UINT
 
 #else
 
@@ -77,33 +78,27 @@ class DetourManager {
 
 public:
     struct Addresses {
-        MemoryLocation inFunction;
-        MemoryLocation inNextFunction;
-        MemoryLocation inStream;
+        TibiaHook::Memory::Address inFunction;
+        TibiaHook::Memory::Address inNextFunction;
+        TibiaHook::Memory::Address inStream;
 
-        MemoryLocation outFunction;
-        MemoryLocation outBufferLength;
-        MemoryLocation outBuffer;
+        TibiaHook::Memory::Address outFunction;
+        TibiaHook::Memory::Address outBufferLength;
+        TibiaHook::Memory::Address outBuffer;
     };
+
+    LOOP_FUNCTION_RETURN_TYPE onLoopTest(LOOP_FUNCTION_PARAMETERS);
 
     typedef std::function<void (const QByteArray&)> DataHandler;
 
-    static void install(const Addresses& settings);
+    static bool install(const Addresses& settings, DataHandler outgoingHandler, DataHandler incomingHandler);
     static void uninstall();
 
-    static void setClientDataHandler(DataHandler clientHandler) {
-        clientHandler_ = clientHandler;
-    }
-
-    static void setServerDataHandler(DataHandler serverHandler) {
-        serverHandler_ = serverHandler;
-    }
-
-    static inline DataQueue* clientQueue() {
+    static inline SafeQueue<QByteArray>* clientQueue() {
         return &clientQueue_;
     }
 
-    static inline DataQueue* serverQueue() {
+    static inline SafeQueue<QByteArray>* serverQueue() {
         return &serverQueue_;
     }
 
@@ -111,12 +106,12 @@ private:
     DetourManager();
     ~DetourManager();
 
-    static DataHandler clientHandler_;
-    static DataHandler serverHandler_;
+    static DataHandler outgoingHandler_;
+    static DataHandler incomingHandler_;
 
     static bool sendingToClient_;
-    static DataQueue clientQueue_;
-    static DataQueue serverQueue_;
+    static SafeQueue<QByteArray> clientQueue_;
+    static SafeQueue<QByteArray> serverQueue_;
 
     static MologieDetours::Detour<LoopSignature*>* loopDetour_;
 
@@ -126,8 +121,8 @@ private:
 
     static MologieDetours::Detour<OutgoingFunctionSignature*>* outFunctionDetour_;
     static quint32* outBufferLength_;
-    static quint8* outBufferPacketChecksum_;
-    static quint8* outBufferPacketData_;
+    static quint8* outBufferBinaryDataChecksum_;
+    static quint8* outBufferBinaryDataData_;
 
     static LOOP_FUNCTION_RETURN_TYPE onLoop(LOOP_FUNCTION_PARAMETERS);
     static void onOutgoing(bool);

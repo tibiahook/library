@@ -13,20 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef PLUGINMANAGERINTERFACE_H
-#define PLUGINMANAGERINTERFACE_H
+#include "UserInterface.h"
 
-#include <QtGlobal>
+UserInterface::UserInterface(QWidget* parent):
+    QMainWindow(parent),
+    tabs_(new QTabWidget(this)) {
+    setCentralWidget(tabs_);
+    setVisible(true);
+    setWindowTitle("Tibia Hook");
 
-class QObject;
-class QString;
+    resize(1000, 800);
+}
 
-class PluginManagerInterface {
-public:
-    virtual ~PluginManagerInterface() {}
+void UserInterface::addTab(QWidget* tab, const QString& label) {
+    tabs_->addTab(tab, label);
+}
 
-    virtual QObject* findPluginByName(const QString& name) = 0;
-    virtual QObject* findPluginByName(const QString& name, quint16 version) = 0;
-};
-
-#endif
+void UserInterface::removeTab(QWidget* tab) {
+    int index = tabs_->indexOf(tab);
+    if (index != -1) {
+        tabs_->removeTab(index);
+    }
+}

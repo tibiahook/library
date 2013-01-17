@@ -13,12 +13,24 @@
  * limitations under the License.
  */
 
-#include "Memory.h"
+#ifndef UILOGGER_H
+#define UILOGGER_H
 
-MemoryLocation Memory::rebase(MemoryLocation address) const {
-    return Memory::staticRebase(address);
-}
+#include "ui_UILogger.h"
 
-MemoryLocation Memory::staticRebase(MemoryLocation address) {
-    return address;
-}
+#include "Logger.h"
+
+class LoggerWidget: public QWidget, private Ui::UILogger {
+    Q_OBJECT
+
+public:
+    LoggerWidget(Logger*, QWidget* = 0);
+
+private slots:
+    void logMessageAdded();
+
+private:
+    Logger* logger_;
+};
+
+#endif

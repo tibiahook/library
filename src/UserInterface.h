@@ -13,18 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef UIMANAGERINTERFACE_H
-#define UIMANAGERINTERFACE_H
+#ifndef USERINTERFACE_H
+#define USERINTERFACE_H
 
-class QWidget;
-class QString;
+#include <QMainWindow>
+#include <QTabWidget>
 
-class UIManagerInterface {
+#include <TibiaHook/UserInterface.h>
+
+class UserInterface: public QMainWindow, public TibiaHook::UserInterface {
 public:
-    virtual ~UIManagerInterface() {}
+    UserInterface(QWidget* parent = NULL);
 
-    virtual void addTab(QWidget* tab, const QString& label) = 0;
-    virtual void removeTab(QWidget* tab) = 0;
+    void addTab(QWidget* tab, const QString& label);
+    void removeTab(QWidget* tab);
+
+private:
+    QTabWidget* tabs_;
 };
 
 #endif

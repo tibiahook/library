@@ -20,26 +20,28 @@
 #include <QByteArray>
 #include <QList>
 
-#include <ProxyManagerInterface.h>
+#include <TibiaHook/ProxyManager.h>
 
-class PacketReader;
-class ProxyInterface;
+namespace TibiaHook {
+class BinaryReader;
+class Proxy;
+}
 
-class ProxyManager: public ProxyManagerInterface {
-    typedef QList<ProxyInterface*> ProxyList;
+class ProxyManager: public TibiaHook::ProxyManager {
+    typedef QList<TibiaHook::Proxy*> ProxyList;
 
 public:
-    bool handleOutgoingPacket(const QByteArray&) const;
-    bool handleIncomingPacket(const QByteArray&) const;
+    bool handleOutgoingBinaryData(const QByteArray&) const;
+    bool handleIncomingBinaryData(const QByteArray&) const;
 
-    void addOutgoingProxy(quint8, ProxyInterface*);
-    void removeOutgoingProxy(quint8, ProxyInterface*);
+    void addOutgoingProxy(quint8, TibiaHook::Proxy*);
+    void removeOutgoingProxy(quint8, TibiaHook::Proxy*);
 
-    void addIncomingProxy(quint8, ProxyInterface*);
-    void removeIncomingProxy(quint8, ProxyInterface*);
+    void addIncomingProxy(quint8, TibiaHook::Proxy*);
+    void removeIncomingProxy(quint8, TibiaHook::Proxy*);
 
 private:
-    static bool handlePacket(const QByteArray& data, const ProxyList* proxies);
+    static bool handleBinaryData(const QByteArray& data, const ProxyList* proxies);
 
     ProxyList outgoingProxyLists_[256];
     ProxyList incomingProxyLists_[256];

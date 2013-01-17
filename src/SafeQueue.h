@@ -13,28 +13,40 @@
  * limitations under the License.
  */
 
-#ifndef HOOKINTERFACE_H
-#define HOOKINTERFACE_H
+#ifndef SAFEQUEUE_H
+#define SAFEQUEUE_H
 
-class LoggerInterface;
-class MemoryInterface;
-class SenderInterface;
-class SettingsInterface;
-class PluginManagerInterface;
-class ProxyManagerInterface;
-class UIManagerInterface;
+#include <QByteArray>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QQueue>
 
-class HookInterface {
+template<typename T>
+class SafeQueue {
 public:
-    virtual ~HookInterface() {}
+    int size() {
+        QMutexLocker locker(&mutex_);
+        return queue_.size();
+    }
 
-    virtual LoggerInterface* logger() = 0;
-    virtual MemoryInterface* memory() = 0;
-    virtual PluginManagerInterface* plugins() = 0;
-    virtual ProxyManagerInterface* proxies() = 0;
-    virtual SenderInterface* sender() = 0;
-    virtual SettingsInterface* settings() = 0;
-    virtual UIManagerInterface* ui() = 0;
+    bool empty() {
+        QMutexLocker locker(&mutex_);
+        return queue_.empty();
+    }
+
+    void enqueue(const T& data) {
+        QMutexLocker locker(&mutex_);
+        queue_.enqueue(data);
+    }
+
+    T dequeue() {
+        QMutexLocker locker(&mutex_);
+        return queue_.dequeue();
+    }
+
+private:
+    QQueue<T> queue_;
+    QMutex mutex_;
 };
 
 #endif

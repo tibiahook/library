@@ -20,9 +20,9 @@
 #include <QMetaType>
 #include <QObject>
 
-#include <LoggerInterface.h>
+#include <TibiaHook/Logger.h>
 
-class Logger: public QObject, public LoggerInterface {
+class Logger: public QObject, public TibiaHook::Logger {
     Q_OBJECT
 
 public:

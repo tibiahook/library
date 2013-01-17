@@ -15,13 +15,14 @@
 
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
+#include <QtGlobal>
+
+#ifdef Q_OS_WIN
 #include <assert.h>
 #include <windows.h>
 #include <Tlhelp32.h>
 
-#include "Memory.h"
-
-DWORD calculateModuleBase() {
+static DWORD calculateModuleBase() {
     MODULEENTRY32 moduleEntry = {0};
     HANDLE snapShot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
 
@@ -41,17 +42,23 @@ DWORD calculateModuleBase() {
             base = (DWORD) moduleEntry.modBaseAddr;
         }
     }
-
     CloseHandle(snapShot);
 
     return base;
 }
+#endif
 
-MemoryLocation Memory::rebase(MemoryLocation address) const {
+#include "Memory.h"
+
+TibiaHook::Memory::Address Memory::rebase(TibiaHook::Memory::Address address) const {
     return Memory::staticRebase(address);
 }
 
-MemoryLocation Memory::staticRebase(MemoryLocation address) {
+TibiaHook::Memory::Address Memory::staticRebase(TibiaHook::Memory::Address address) {
+#ifdef Q_OS_WIN
     static DWORD moduleBase = calculateModuleBase();
     return (address - 0x400000) + moduleBase;
+#else
+    return address;
+#endif
 }

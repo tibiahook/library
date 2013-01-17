@@ -15,11 +15,12 @@
 
 #include <QDebug>
 
-#include "PacketReader.h"
-#include "ProxyInterface.h"
+#include <TibiaHook/BinaryReader.h>
+#include <TibiaHook/Proxy.h>
+
 #include "ProxyManager.h"
 
-bool ProxyManager::handlePacket(const QByteArray& data, const ProxyList* proxyLists) {
+bool ProxyManager::handleBinaryData(const QByteArray& data, const ProxyList* proxyLists) {
     if (data.length() <= 0) {
         return true;
     }
@@ -30,43 +31,43 @@ bool ProxyManager::handlePacket(const QByteArray& data, const ProxyList* proxyLi
     }
 
     // Iterate all proxies and stop when one returns false
-    PacketReader reader(data);
-    foreach (ProxyInterface* proxy, proxyList) {
+    TibiaHook::BinaryReader reader(data);
+    foreach (TibiaHook::Proxy* proxy, proxyList) {
         try {
-            if (!proxy->handlePacket(reader)) {
+            if (!proxy->handleMessage(reader)) {
                 return false;
             }
         }
-        catch (std::exception& exception) {
+        catch (std::exception&) {
             qDebug() << "unhandled exception in proxy";
         }
 
-        // Reset reader position after each handlePacket call
+        // Reset reader position after each handleBinaryData call
         reader.setPosition(0);
     }
     return true;
 }
 
-bool ProxyManager::handleOutgoingPacket(const QByteArray& data) const {
-    return handlePacket(data, outgoingProxyLists_);
+bool ProxyManager::handleOutgoingBinaryData(const QByteArray& data) const {
+    return handleBinaryData(data, outgoingProxyLists_);
 }
 
-bool ProxyManager::handleIncomingPacket(const QByteArray& data) const {
-    return handlePacket(data, incomingProxyLists_);
+bool ProxyManager::handleIncomingBinaryData(const QByteArray& data) const {
+    return handleBinaryData(data, incomingProxyLists_);
 }
 
-void ProxyManager::addOutgoingProxy(quint8 type, ProxyInterface* proxy) {
+void ProxyManager::addOutgoingProxy(quint8 type, TibiaHook::Proxy* proxy) {
     outgoingProxyLists_[type].append(proxy);
 }
 
-void ProxyManager::removeOutgoingProxy(quint8 type, ProxyInterface* proxy) {
+void ProxyManager::removeOutgoingProxy(quint8 type, TibiaHook::Proxy* proxy) {
     outgoingProxyLists_[type].removeAll(proxy);
 }
 
-void ProxyManager::addIncomingProxy(quint8 type, ProxyInterface* proxy) {
+void ProxyManager::addIncomingProxy(quint8 type, TibiaHook::Proxy* proxy) {
     incomingProxyLists_[type].append(proxy);
 }
 
-void ProxyManager::removeIncomingProxy(quint8 type, ProxyInterface* proxy) {
+void ProxyManager::removeIncomingProxy(quint8 type, TibiaHook::Proxy* proxy) {
     incomingProxyLists_[type].removeAll(proxy);
 }

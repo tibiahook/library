@@ -17,14 +17,14 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QJsonObject>
 #include <QMessageBox>
 #include <QPluginLoader>
 
-#include <PluginInterface.h>
-#include <RuntimeError.h>
+#include <TibiaHook/Plugin.h>
+#include <TibiaHook/RuntimeError.h>
 
 #include "PluginManager.h"
-#include "JsonSettings.h"
 
 #ifdef Q_OS_WIN
 #define PLUGIN_WILDCARD "*.dll"
@@ -35,15 +35,15 @@
 PluginInfo* findPluginInfoByName(PluginInfo::List& list, const QString& name, quint16 version) {
     for (PluginInfo::List::iterator it = list.begin(); it != list.end(); ++it) {
         PluginInfo* info = *it;
-        if (info->name().compare(name) == 0 && info->version() >= version) {
+        if (info->name.compare(name) == 0 && info->version >= version) {
             return info;
         }
     }
     return NULL;
 }
 
-PluginManager::PluginManager(HookInterface* hook):
-    hook_(hook) {
+PluginManager::PluginManager(TibiaHook::Bot* bot):
+    bot_(bot) {
 }
 
 PluginManager::~PluginManager() {
@@ -55,19 +55,19 @@ void PluginManager::load(const QList<QString>& pluginDirectories) {
         PluginInfo* info = loadPluginInfo(pluginDirectory);
         if (info != NULL) {
             pluginInfos_.append(info);
-            qDebug() << "loaded plugin metadata: " << info->name();
+            qDebug() << "loaded plugin: " << info->name;
         }
     }
 
     // Generate dependency graph
     Dependencies dependencies;
     for (PluginInfo::List::iterator it = pluginInfos_.begin(); it != pluginInfos_.end(); ++it) {
-        PluginInfo::Dependencies deps = (*it)->dependencies();
+        PluginInfo::Dependencies deps = (*it)->dependencies;
         for (PluginInfo::Dependencies::iterator depit = deps.begin(); depit != deps.end(); ++depit) {
             PluginInfo* dependency = findPluginInfoByName(pluginInfos_, depit->first, depit->second);
             if (dependency == NULL) {
-                throw RuntimeError(QString("Could not load '%1': unmet dependency '%2' [%3]!")
-                                   .arg((*it)->name())
+                throw TibiaHook::RuntimeError(QString("Could not load '%1': unmet dependency '%2' [%3]!")
+                                   .arg((*it)->name)
                                    .arg(depit->first)
                                    .arg(depit->second));
             }
@@ -114,30 +114,28 @@ void PluginManager::load(const QList<QString>& pluginDirectories) {
     // Load the plugins
     for (PluginInfo::List::iterator it = pluginInfos_.begin(); it != pluginInfos_.end(); ++it) {
         PluginInfo* info = *it;
-
-        QPluginLoader loader(info->libraryPath());
-        QObject* instance = loader.instance();
+        QObject* instance = info->loader.instance();
 
         if (instance == 0) {
-            qDebug() << "unable to load plugin: " << info->libraryPath() << loader.errorString();
+            qDebug() << "unable to load plugin: " << info->loader.fileName() << info->loader.errorString();
             continue;
         }
 
         // Check if it is a valid plugin
-        PluginInterface* plugin = qobject_cast<PluginInterface*>(instance);
+        TibiaHook::Plugin* plugin = qobject_cast<TibiaHook::Plugin*>(instance);
         if (plugin == 0) {
-            qDebug() << "unable to convert plugin: " << info->libraryPath();
+            qDebug() << "unable to convert plugin: " << info->loader.fileName();
             continue;
         }
 
         try {
-            plugin->install(hook_, info->settings());
+            plugin->install(bot_);
             plugins_.insert(info, instance);
         }
         catch(std::exception& exception) {
             QMessageBox message;
             message.setWindowTitle(QApplication::applicationName());
-            message.setText("Could not load \"" + info->name() + "\" plugin!");
+            message.setText("Could not load \"" + info->name + "\" plugin!");
             message.setDetailedText(exception.what());
             message.setDefaultButton(QMessageBox::Ignore);
             message.exec();
@@ -152,9 +150,9 @@ void PluginManager::unload() {
     it.toBack();
     while (it.hasPrevious()) {
         PluginInfo* info = it.previous();
-        PluginInterface* plugin = qobject_cast<PluginInterface*>(plugins_.value(info));
+        TibiaHook::Plugin* plugin = qobject_cast<TibiaHook::Plugin*>(plugins_.value(info));
 
-        qDebug() << "uninstalling" << info->name();
+        qDebug() << "uninstalling" << info->name;
         plugin->uninstall();
 
         delete plugin;
@@ -167,7 +165,7 @@ void PluginManager::unload() {
 QObject* PluginManager::findPluginByName(const QString& name) {
     for (PluginMap::iterator it = plugins_.begin(); it != plugins_.end(); ++it) {
         PluginInfo* info = it.key();
-        if(info->name().compare(name) == 0) {
+        if(info->name.compare(name) == 0) {
             return it.value();
         }
     }
@@ -177,7 +175,7 @@ QObject* PluginManager::findPluginByName(const QString& name) {
 QObject* PluginManager::findPluginByName(const QString& name, quint16 minVersion) {
     for (PluginMap::iterator it = plugins_.begin(); it != plugins_.end(); ++it) {
         PluginInfo* info = it.key();
-        if(info->name().compare(name) == 0 && info->version() >= minVersion) {
+        if(info->name.compare(name) == 0 && info->version >= minVersion) {
             return it.value();
         }
     }
@@ -188,43 +186,25 @@ PluginInfo* PluginManager::loadPluginInfo(const QString& directory) {
     try {
         return new PluginInfo(directory);
     }
-    catch(RuntimeError& error) {
+    catch(TibiaHook::RuntimeError& error) {
         qWarning() << error.what();
     }
     return NULL;
 }
 
-PluginInfo::PluginInfo(const QString& directory) {
-    QDir dir(directory);
-    QStringList candidates = dir.entryList(QStringList() << PLUGIN_WILDCARD, QDir::Files | QDir::NoDotAndDotDot);
+PluginInfo::PluginInfo(const QString& directoryString) {
+    QDir directory(directoryString);
+    QStringList candidates = directory.entryList(QStringList() << PLUGIN_WILDCARD, QDir::Files | QDir::NoDotAndDotDot);
     if (candidates.length() == 0) {
-        throw RuntimeError(QString("Could not load shared library in '%1'!").arg(directory));
-    }
-    libraryPath_ = dir.absoluteFilePath(candidates.first());
-
-    // Load metadata
-    QString metaPath = dir.absoluteFilePath("meta.json");
-    QFile metaFile(metaPath);
-    if (!metaFile.exists()) {
-        throw RuntimeError(QString("Could not load '%1'!").arg(metaPath));
-    }
-    if (!metaFile.open(QIODevice::ReadOnly)) {
-        throw RuntimeError(QString("Could not open '%1'!").arg(metaPath));
+        throw TibiaHook::RuntimeError(QString("Could not load shared library in '%1'!").arg(directoryString));
     }
 
-    JsonSettings meta;
-    if (!meta.parse(metaFile.readAll())) {
-        throw RuntimeError(QString("Could not parse '%1'!").arg(metaPath));
-    }
-    if (!meta.contains("name")) {
-        throw RuntimeError(QString("Could not load plugin name in '%1'!").arg(metaPath));
-    }
-    if (!meta.contains("version")) {
-        throw RuntimeError(QString("Could not load version in '%1'!").arg(metaPath));
-    }
+    QString libraryPath = directory.absoluteFilePath(candidates.first());
+    loader.setFileName(libraryPath);
 
-    name_ = meta.value("name").toString();
-    version_ = meta.value("version").toUInt();
+    QVariantMap meta = loader.metaData().value("MetaData").toObject().toVariantMap();
+    name = meta.value("name").toString();
+    version = meta.value("version").toString().toUInt();
 
     QVariantList deps = meta.value("dependencies").toList();
     for (QVariantList::iterator it = deps.begin(); it != deps.end(); ++it) {
@@ -232,39 +212,6 @@ PluginInfo::PluginInfo(const QString& directory) {
 
         QString name = dep.at(0).toString();
         quint16 version = dep.at(1).toUInt();
-        dependencies_.append(PluginInfo::Dependency(name, version));
+        dependencies.append(PluginInfo::Dependency(name, version));
     }
-
-    // Load config
-    QString configPath = dir.absoluteFilePath("config.json");
-    QFile configFile(configPath);
-    if (!configFile.exists()) {
-        throw RuntimeError(QString("Could not load '%1'!").arg(configPath));
-    }
-    if (!configFile.open(QIODevice::ReadOnly)) {
-        throw RuntimeError(QString("Could not open '%1'!").arg(configPath));
-    }
-    if (!settings_.parse(configFile.readAll())) {
-        throw RuntimeError(QString("Could not parse '%1'!").arg(configPath));
-    }
-}
-
-SettingsInterface* PluginInfo::settings() {
-    return &settings_;
-}
-
-const PluginInfo::Dependencies& PluginInfo::dependencies() const {
-    return dependencies_;
-}
-
-const QString& PluginInfo::libraryPath() const {
-    return libraryPath_;
-}
-
-const QString& PluginInfo::name() const {
-    return name_;
-}
-
-quint16 PluginInfo::version() const {
-    return version_;
 }

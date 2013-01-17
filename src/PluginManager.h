@@ -20,46 +20,35 @@
 #include <QList>
 #include <QObject>
 #include <QPair>
+#include <QPluginLoader>
 
-#include <HookInterface.h>
-#include <PluginManagerInterface.h>
+#include <TibiaHook/Bot.h>
+#include <TibiaHook/PluginManager.h>
 
-#include "JsonSettings.h"
-
-class PluginInfo {
-public:
+struct PluginInfo {
     typedef QList<PluginInfo*> List;
     typedef QMutableListIterator<PluginInfo*> MutableListIterator;
 
     typedef QPair<QString, quint16> Dependency;
     typedef QList<Dependency> Dependencies;
 
-    PluginInfo(const QString&);
+    PluginInfo(const QString& directoryString);
 
-    SettingsInterface* settings();
+    QPluginLoader loader;
+    QString name;
+    quint16 version;
 
-    const PluginInfo::Dependencies& dependencies() const;
-    const QString& libraryPath() const;
-    const QString& name() const;
-    quint16 version() const;
-
-private:
-    JsonSettings settings_;
-
-    PluginInfo::Dependencies dependencies_;
-    QString libraryPath_;
-    QString name_;
-    quint16 version_;
+    PluginInfo::Dependencies dependencies;
 };
 
-class PluginManager: public PluginManagerInterface {
+class PluginManager: public TibiaHook::PluginManager {
 public:
     typedef QMap<PluginInfo*, QObject*> PluginMap;
     typedef QPair<PluginInfo*, PluginInfo*> Dependency;
     typedef QList<Dependency> Dependencies;
     typedef QMutableListIterator<Dependency> MutableDependencyIterator;
 
-    PluginManager(HookInterface*);
+    PluginManager(TibiaHook::Bot*);
     ~PluginManager();
 
     void load(const QList<QString>& pluginDirectories);
@@ -71,7 +60,7 @@ public:
 private:
     PluginInfo* loadPluginInfo(const QString& pluginDirectory);
 
-    HookInterface* hook_;
+    TibiaHook::Bot* bot_;
     QString directory_;
 
     PluginMap plugins_;

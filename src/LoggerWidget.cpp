@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "UILogger.h"
+#include "LoggerWidget.h"
 
-UILogger::UILogger(Logger* logger, QWidget* parent):
+LoggerWidget::LoggerWidget(Logger* logger, QWidget* parent):
     QWidget(parent),
     logger_(logger) {
 
@@ -28,7 +28,7 @@ UILogger::UILogger(Logger* logger, QWidget* parent):
     QObject::connect(logger_, SIGNAL(entryAdded()), this, SLOT(logMessageAdded()), Qt::QueuedConnection);
 }
 
-void UILogger::logMessageAdded() {
+void LoggerWidget::logMessageAdded() {
     const int loggerSize = logger_->size();
     const Logger::Entry* entry = logger_->entryAt(loggerSize - 1);
     const int rowIndex = logTable_->rowCount();

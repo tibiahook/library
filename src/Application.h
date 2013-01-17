@@ -18,50 +18,81 @@
 
 #include <QApplication>
 
-#include <HookInterface.h>
+#include <TibiaHook/Bot.h>
+#include <TibiaHook/BinaryData.h>
 
+#include "DetourSender.h"
 #include "Logger.h"
-#include "JsonSettings.h"
 #include "Memory.h"
 #include "PluginManager.h"
 #include "ProxyManager.h"
-#include "DetourSender.h"
-#include "UILogger.h"
-#include "UIManager.h"
+#include "UserInterface.h"
 
-class Application: public QApplication, public HookInterface {
+class LoggerWidget;
+class UserInterface;
+
+class Application: public QApplication, public TibiaHook::Bot {
 public:
     Application();
     ~Application();
 
     void initialize();
 
-    LoggerInterface* logger() { return &logger_; }
-    MemoryInterface* memory() { return &memory_; }
-    PluginManagerInterface* plugins() { return &plugins_; }
-    ProxyManagerInterface* proxies() { return &proxies_; }
-    SenderInterface* sender() { return &sender_; }
-    SettingsInterface* settings() { return &settings_; }
-    UIManagerInterface* ui() { return ui_; }
+    inline void sendToClient(const QByteArray& data) {
+        DetourManager::clientQueue()->enqueue(data);
+    }
+
+    inline void sendToClient(const TibiaHook::BinaryData& data) {
+        DetourManager::clientQueue()->enqueue(data.data());
+    }
+
+    inline void sendToServer(const QByteArray& data) {
+        DetourManager::serverQueue()->enqueue(data);
+    }
+
+    inline void sendToServer(const TibiaHook::BinaryData& data) {
+        DetourManager::serverQueue()->enqueue(data.data());
+    }
+
+    TibiaHook::Logger* logger() {
+        return &logger_;
+    }
+
+    TibiaHook::Memory* memory() {
+        return &memory_;
+    }
+
+    TibiaHook::PluginManager* pluginManager() {
+        return &pluginManager_;
+    }
+
+    TibiaHook::ProxyManager* proxyManager() {
+        return &proxyManager_;
+    }
+
+    TibiaHook::UserInterface* userInterface() {
+        return userInterface_;
+    }
 
     static Application* instance() {
         return (Application*) QCoreApplication::instance();
     }
+
+    void outgoingMessageHandler(const QByteArray& data);
+    void incomingMessageHandler(const QByteArray& data);
 
 private:
     Application(const Application&);
     Application& operator=(const Application&);
 
     Logger logger_;
-    JsonSettings settings_;
     Memory memory_;
-    DetourSender sender_;
-    PluginManager plugins_;
-    ProxyManager proxies_;
+    PluginManager pluginManager_;
+    ProxyManager proxyManager_;
 
     // QObjects need to be heap allocated
-    UIManager* ui_;
-    UILogger* uiLogger_;
+    UserInterface* userInterface_;
+    LoggerWidget* loggerWidget_;
 };
 
 #endif

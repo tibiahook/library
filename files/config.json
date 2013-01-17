@@ -1,35 +1,26 @@
 {
     "plugins": [
-        "../plugin-minimap",
-        "../plugin-minimap-ui",
-        "../plugin-path",
-        "../plugin-tracker",
-        "../plugin-walker",
-    ],
-    "plugins:old": [
-        "../plugin-battelist",
-        "../plugin-channels",
-        "../plugin-minimap",
-        "../plugin-minimap-ui",
-        "../plugin-path",
-        "../plugin-tracker",
-        "../plugin-walker",
+        "../../../plugins/build-win32/plugin-minimap",
+        "../../../plugins/build-win32/plugin-minimap-ui",
+        "../../../plugins/build-win32/plugin-path",
+        "../../../plugins/build-win32/plugin-tracker",
+        "../../../plugins/build-win32/plugin-walker"
     ],
     "version": "981",
     "win32:addresses": {
-        "inFunction": 4623312,
-        "inNextFunction": 5357280,
-        "inStream": 10331636,
-        "outFunction": 5354736,
-        "outBuffer": 8117720,
-        "outBufferLength": 10331656
+        "inFunction": "4623312",
+        "inNextFunction": "5357280",
+        "inStream": "10331636",
+        "outFunction": "5354736",
+        "outBuffer": "8117720",
+        "outBufferLength": "10331656"
     },
     "unix:addresses": {
-        "inFunction": 135594976,
-        "inNextFunction": 137387680,
-        "inStream": 140370096,
-        "outFunction": 137341168,
-        "outBuffer": 140351616,
-        "outBufferLength": 140353672
+        "inFunction": "135594976",
+        "inNextFunction": "137387680",
+        "inStream": "140370096",
+        "outFunction": "137341168",
+        "outBuffer": "140351616",
+        "outBufferLength": "140353672"
     }
 }

@@ -20,7 +20,7 @@
 
 #include "Application.h"
 
-HANDLE thread_handle;
+HANDLE thread;
 DWORD thread_id;
 
 Application* application = NULL;
@@ -41,19 +41,28 @@ DWORD WINAPI hook_thread(LPVOID) {
     return 0;
 }
 
-__declspec(dllexport) LRESULT CALLBACK hook_callback(int nCode, WPARAM wParam, LPARAM lParam) {
+extern "C" __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    Q_UNUSED(hinstDLL);
+    Q_UNUSED(lpvReserved);
+
+    if (fdwReason == DLL_PROCESS_ATTACH) {
+        thread = CreateThread(NULL, 0, hook_thread, NULL, 0, &thread_id);
+    }
+    else if (fdwReason == DLL_PROCESS_DETACH) {
+        application->quit();
+
+        // Wait until cleanup is finished
+        WaitForSingleObject(thread, INFINITE);
+    }
+
+    return TRUE;
+}
+
+extern "C" __declspec(dllexport) LRESULT CALLBACK hook_callback(int nCode, WPARAM wParam, LPARAM lParam) {
     static bool injected = false;
     if (!injected) {
         injected = true;
-        thread_handle = CreateThread(NULL, 0, hook_thread, NULL, 0, &thread_id);
+        thread = CreateThread(NULL, 0, hook_thread, NULL, 0, &thread_id);
     }
     return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
-
-/**
-  * This function runs when the library is injected.
-  */
-extern "C" __declspec(dllexport) void hook_constructor(HINSTANCE hMod, DWORD dwThreadId) {
-    SetWindowsHookEx(WH_GETMESSAGE, hook_callback, hMod, dwThreadId);
-    PostThreadMessage(dwThreadId, WM_NULL, 0, 0);
 }

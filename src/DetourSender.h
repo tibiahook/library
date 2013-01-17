@@ -16,20 +16,20 @@
 #ifndef DETOURSENDER_H
 #define DETOURSENDER_H
 
-#include <SenderInterface.h>
+#include <TibiaHook/BinaryData.h>
 
 #include "DetourManager.h"
-#include "PacketBuilder.h"
 
-class DetourSender: public SenderInterface {
+/*class DetourSender: public SenderInterface {
 public:
-    DetourSender(): SenderInterface() {}
+    DetourSender():
+        SenderInterface() {}
 
     inline void sendToClient(const QByteArray& data) {
         DetourManager::clientQueue()->enqueue(data);
     }
 
-    inline void sendToClient(const Packet& packet) {
+    inline void sendToClient(const BinaryData& packet) {
         DetourManager::clientQueue()->enqueue(packet.data());
     }
 
@@ -37,13 +37,13 @@ public:
         DetourManager::serverQueue()->enqueue(data);
     }
 
-    inline void sendToServer(const Packet& packet) {
+    inline void sendToServer(const BinaryData& packet) {
         DetourManager::serverQueue()->enqueue(packet.data());
     }
 
 private:
     DetourSender(const DetourSender&);
     DetourSender& operator=(const DetourSender&);
-};
+};*/
 
 #endif

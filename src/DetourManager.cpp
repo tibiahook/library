@@ -17,18 +17,30 @@
 
 #include <QDebug>
 
-#include <detours.h>
-
 #include "DetourManager.h"
+
+#include <detours.h>
 
 #ifndef Q_OS_WIN
 #include <dlfcn.h>
 #endif
 
-void DetourManager::install(const Addresses& addresses) {
+bool DetourManager::install(const Addresses& addresses, DataHandler outgoingHandler, DataHandler incomingHandler) {
+    outgoingHandler_ = outgoingHandler;
+    incomingHandler_ = incomingHandler;
+
 #ifdef Q_OS_WIN
     HMODULE user32 = ::GetModuleHandle("User32.dll");
+    if (user32 == NULL) {
+        qDebug() << "Could not load User32.dll!";
+        return false;
+    }
+
     FARPROC peekMessage = ::GetProcAddress(user32, "PeekMessageA");
+    if (peekMessage == NULL) {
+        qDebug() << "Could not load PeekMessageA in User32.dll";
+        return false;
+    }
 
     // Detour the peekMessage function
     loopDetour_ = new MologieDetours::Detour<LoopSignature*>((LoopSignature*) peekMessage, &DetourManager::onLoop);
@@ -42,8 +54,10 @@ void DetourManager::install(const Addresses& addresses) {
 
     outFunctionDetour_ = new MologieDetours::Detour<OutgoingFunctionSignature*>((OutgoingFunctionSignature*) Memory::staticRebase(addresses.outFunction), &DetourManager::onOutgoing);
     outBufferLength_ = (quint32*) Memory::staticRebase(addresses.outBufferLength);
-    outBufferPacketChecksum_ = (quint8*) Memory::staticRebase(addresses.outBuffer);
-    outBufferPacketData_ = (quint8*) (Memory::staticRebase(addresses.outBuffer) + 8);
+    outBufferBinaryDataChecksum_ = (quint8*) Memory::staticRebase(addresses.outBuffer);
+    outBufferBinaryDataData_ = (quint8*) (Memory::staticRebase(addresses.outBuffer) + 8);
+
+    return true;
 }
 
 void DetourManager::uninstall() {
@@ -53,15 +67,15 @@ void DetourManager::uninstall() {
 }
 
 /**
-  * This function gets called in the Tibia thread.
-  */
+ * This function gets called in the Tibia thread.
+ */
 LOOP_FUNCTION_RETURN_TYPE DetourManager::onLoop(LOOP_FUNCTION_PARAMETERS) {
     if (!serverQueue_.empty()) {
         // Replace outgoing buffer with new buffer
         QByteArray buffer = serverQueue_.dequeue();
         *outBufferLength_ = buffer.length() + 8;
-        memset(outBufferPacketChecksum_, 0, 8);
-        memcpy(outBufferPacketData_, buffer.constData(), buffer.length());
+        memset(outBufferBinaryDataChecksum_, 0, 8);
+        memcpy(outBufferBinaryDataData_, buffer.constData(), buffer.length());
 
         // Call outgoing function with modified buffer
         outFunctionDetour_->GetOriginalFunction()(true);
@@ -89,17 +103,17 @@ LOOP_FUNCTION_RETURN_TYPE DetourManager::onLoop(LOOP_FUNCTION_PARAMETERS) {
 }
 
 /**
-  * This function gets called in the Tibia thread.
-  */
+ * This function gets called in the Tibia thread.
+ */
 int DetourManager::onIncomingNext() {
-    if (!sendingToClient_ && serverHandler_ != NULL) {
+    if (!sendingToClient_ && incomingHandler_ != NULL) {
         int command = inNextFunctionDetour_->GetOriginalFunction()();
         if (command != -1) {
             ParseStream* stream = inStream_;
             quint32 position = stream->position - 1;
             quint32 length = stream->size - position;
 
-            serverHandler_(QByteArray((const char*) (stream->buffer + position), length));
+            incomingHandler_(QByteArray((const char*) (stream->buffer + position), length));
         }
         return command;
     }
@@ -107,11 +121,11 @@ int DetourManager::onIncomingNext() {
 }
 
 /**
-  * This function gets called in the Tibia thread.
-  */
+ * This function gets called in the Tibia thread.
+ */
 void DetourManager::onOutgoing(bool encrypt) {
-    if (encrypt && clientHandler_ != NULL) {
-        clientHandler_(QByteArray((const char*) outBufferPacketData_, (*outBufferLength_) - 8));
+    if (encrypt && outgoingHandler_ != NULL) {
+        outgoingHandler_(QByteArray((const char*) outBufferBinaryDataData_, (*outBufferLength_) - 8));
         return;
     }
     outFunctionDetour_->GetOriginalFunction()(encrypt);
@@ -119,12 +133,12 @@ void DetourManager::onOutgoing(bool encrypt) {
 
 /* Initialize static variables */
 
-DetourManager::DataHandler DetourManager::clientHandler_ = NULL;
-DetourManager::DataHandler DetourManager::serverHandler_ = NULL;
+DetourManager::DataHandler DetourManager::outgoingHandler_ = NULL;
+DetourManager::DataHandler DetourManager::incomingHandler_ = NULL;
 
 bool DetourManager::sendingToClient_ = false;
-DataQueue DetourManager::clientQueue_;
-DataQueue DetourManager::serverQueue_;
+SafeQueue<QByteArray> DetourManager::clientQueue_;
+SafeQueue<QByteArray> DetourManager::serverQueue_;
 
 MologieDetours::Detour<DetourManager::LoopSignature*>* DetourManager::loopDetour_;
 
@@ -134,5 +148,5 @@ DetourManager::ParseStream* DetourManager::inStream_ = NULL;
 
 MologieDetours::Detour<DetourManager::OutgoingFunctionSignature*>* DetourManager::outFunctionDetour_;
 quint32* DetourManager::outBufferLength_ = NULL;
-quint8* DetourManager::outBufferPacketChecksum_ = NULL;
-quint8* DetourManager::outBufferPacketData_ = NULL;
+quint8* DetourManager::outBufferBinaryDataChecksum_ = NULL;
+quint8* DetourManager::outBufferBinaryDataData_ = NULL;

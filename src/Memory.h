@@ -19,41 +19,41 @@
 #include <QtGlobal>
 #include <QString>
 
-#include <MemoryInterface.h>
+#include <TibiaHook/Memory.h>
 
-class Memory: public MemoryInterface {
+class Memory: public TibiaHook::Memory {
 public:
-    inline quint8 readUInt8(MemoryLocation location) const {
-        return read<quint8>(location);
+    inline quint8 readUInt8(TibiaHook::Memory::Address address) const {
+        return read<quint8>(address);
     }
 
-    inline quint16 readUInt16(MemoryLocation location) const {
-        return read<quint16>(location);
+    inline quint16 readUInt16(TibiaHook::Memory::Address address) const {
+        return read<quint16>(address);
     }
 
-    inline quint32 readUInt32(MemoryLocation location) const {
-        return read<quint32>(location);
+    inline quint32 readUInt32(TibiaHook::Memory::Address address) const {
+        return read<quint32>(address);
     }
 
-    inline quint64 readUInt64(MemoryLocation location) const {
-        return read<quint64>(location);
+    inline quint64 readUInt64(TibiaHook::Memory::Address address) const {
+        return read<quint64>(address);
     }
 
-    inline const char* readRawString(MemoryLocation location) const {
-        return (const char*) location;
+    inline const char* readRawString(TibiaHook::Memory::Address address) const {
+        return (const char*) address;
     }
 
-    inline QString readString(MemoryLocation location) const {
-        return QString(readRawString(location));
+    inline QString readString(TibiaHook::Memory::Address address) const {
+        return QString(readRawString(address));
     }
 
-    MemoryLocation rebase(MemoryLocation address) const;
-    static MemoryLocation staticRebase(MemoryLocation address);
+    TibiaHook::Memory::Address rebase(TibiaHook::Memory::Address address) const;
+    static TibiaHook::Memory::Address staticRebase(TibiaHook::Memory::Address address);
 
 private:
     template <typename T>
-    inline T read(MemoryLocation location) const {
-        return *((T*) location);
+    inline T read(TibiaHook::Memory::Address address) const {
+        return *((T*) address);
     }
 };
 
