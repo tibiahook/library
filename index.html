@@ -1,67 +1,1041 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Library by tibiahook</title>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<title>Library by tibiahook</title>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1 class="header">Library</h1>
-        <p class="header">The Tibia Hook library.</p>
+<link rel="stylesheet" href="stylesheets/styles.css">
+<link rel="stylesheet" href="stylesheets/pygment_trac.css">
+<script src="javascripts/scale.fix.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<!--[if lt IE 9]>
+<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+</head>
 
-        <ul>
-          <li class="download"><a class="buttons" href="https://github.com/tibiahook/library/zipball/master">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/tibiahook/library/tarball/master">Download TAR</a></li>
-          <li><a class="buttons github" href="https://github.com/tibiahook/library">View On GitHub</a></li>
-        </ul>
+<body>
+<div class="wrapper">
 
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/tibiahook">tibiahook</a></p>
+<header>
+<h1 class="header">Library</h1>
+<p class="header">The Tibia Hook library.</p>
+
+<ul>
+  <li class="download"><a class="buttons" href="https:&nbsp;&nbsp;&nbsp;&nbsp;//github.com/tibiahook/library/zipball/master">Download ZIP</a></li>
+  <li class="download"><a class="buttons" href="https:&nbsp;&nbsp;&nbsp;&nbsp;//github.com/tibiahook/library/tarball/master">Download TAR</a></li>
+  <li><a class="buttons github" href="https:&nbsp;&nbsp;&nbsp;&nbsp;//github.com/tibiahook/library">View On GitHub</a></li>
+</ul>
+
+<p class="header">This project is maintained by <a class="header name" href="https:&nbsp;&nbsp;&nbsp;&nbsp;//github.com/tibiahook">tibiahook</a></p>
+</header>
+
+<section>
+
+<div>
+
+<h1>Introduction</h1>
+<h2>Tibia</h2>
+<p>Tibia is a massively multiplayer online role-playing game (MMORPG) created by CipSoft [
+1
+]. It takes place in a tile-based multilevel game world. It has a client for both Windows and Linux.</p>
+<p>
+</p><h2>Botting</h2>
+<p>A bot is a method of controlling an in-game character such that the character can automatically gain levels and earn money.</p>
+<h2>Bot API for Tibia</h2>
+<p>This paper describes the implementation of a bot API for Tibia. The bot API can then be used to develop plugins to easily create a bot.</p>
+<p>The implementation of a bot API follows some particular steps. First we must understand how the client works, i.e. get to know the protocol, the internal functions, and the data structure. When we know how the client works, we can start reverse-engineering the client to look for useful functions. Those functions can then be called and redirected by injecting our bot API into the Tibia client.</p>
+<p>Lastly, this paper describes a method to add a graphical user interface and a plugin system to the bot API.</p>
+
+<h1>Tibia's Protocol</h1>
+<p>Since Tibia is a multiplayer game, it has a central server. The Tibia client communicates with the server to perform actions, like moving around, sending a message or attacking a creature.</p>
+<p>Thus, before we can create a bot, we must understand the protocol the Tibia client uses to communicate with the server. When we understand the protocol, we can send custom messages to the server, or intercept and parse messages from the server.</p>
+<h2>
+Packets</h2>
+<p>The basic building block of the communication between client and server are packets. A packet represents an action.</p>
+<p>The first byte of a packet represents the type of action. A packet has a variable length that depends on its type. Since both client and server know the protocol, it isn’t necessary to put the length in the packet. This makes the packet smaller and thus faster to transmit.</p>
+<p>We can distinguish two types of packets; packets that are sent from the client to the server, and packets that are sent from the server to the client. From the point-of-view of the client, the former are called outgoing packets, and the latter incoming packets.</p>
+<p>Below you can find two example packets. The first one is an outgoing packet. When the client presses the “up” key on the keyboard, it sends the “Walk North” packet to the server.</p>
+<p>When you get hit by a creature, it shows a text effect above you with the damage dealt. This is a text effect, sent by the server to the client, i.e. an incoming packet. This is illustrated in the second example, where a damage of 121 is dealt.</p>
 
 
-      </header>
-      <section>
-        <h3>Welcome to GitHub Pages.</h3>
+<table><tbody><tr><td>Index</td>
+<td>Value</td>
+<td>Description</td>
+</tr>
+<tr><td>0</td>
+<td>0x65</td>
+<td>1 byte, packet type</td>
+</tr>
+</tbody>
+</table>
+<p>Packet 1, Walk North</p>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<table><tbody><tr><td>Index</td>
+<td>Value</td>
+<td>Description</td>
+</tr>
+<tr><td>0</td>
+<td>0x65</td>
+<td>1 byte, packet type</td>
+</tr>
+<tr><td>1</td>
+<td>0x00 0x00 0x7F 0x25</td>
+<td>4 bytes, X coordinate of the text effect</td>
+</tr>
+<tr><td>5</td>
+<td>0x00 0x00 0x8F 0x11</td>
+<td>4 bytes, Y coordinate of the text effect</td>
+</tr>
+<tr><td>9</td>
+<td>0x07</td>
+<td>1 byte, Z coordinate of the text effect</td>
+</tr>
+<tr><td>10</td>
+<td>0x79</td>
+<td>1 byte, colour of the text effect</td>
+</tr>
+<tr><td>11</td>
+<td>0x00 0x03</td>
+<td>2 bytes, length of the text</td>
+</tr>
+<tr><td>13</td>
+<td>0x31</td>
+<td>1 byte, ASCII “1”</td>
+</tr>
+<tr><td>14</td>
+<td>0x32</td>
+<td>1 byte, ASCII “2”</td>
+</tr>
+<tr><td>15</td>
+<td>0x31</td>
+<td>1 byte, ASCII “1”</td>
+</tr>
+</tbody>
+</table>
+<p>Packet 2, Text Effect</p>
+<h2>
+Messages</h2>
+<p>A message is a list of packets.</p>
+<p>Contrary to a packet, a message has two bytes that contain its length. &nbsp;You might ask yourself, why do we need to know the length? Just read the packets one by one? Well, the next section, Section 0, explains that the XTEA algorithm adds padding bytes so that the length of the message is divisible by eight. For example, when we receive a message of five bytes, we actually receive eight bytes. In order to know if the sixth byte is the first byte of the packet, or just a padding byte, we need to know the length.</p>
+<p>The example below shows a message containing the “Move North” packet. The first two bytes define the length of the message, which is equal to one. The real length of the message, as it is sent over the network, is eight. The server will receive this message and read the length out of the first two bytes, in this example it is equal to one. Then it will start parsing the first packet. It reads the packet type and knows that it is the “Move North” packet. It moves the client one tile to the north and goes on with parsing. But we have read one byte, and the length is only one byte. So we stop parsing this message!</p>
+<p>Without the first two bytes, i.e. the length of the message, we would have continued parsing the padding bytes and we would be reading non-existing packets types and thus parsing non-existing packets.</p>
+
+
+<table><tbody><tr><td>Index</td>
+<td>Value</td>
+<td>Description</td>
+</tr>
+<tr><td>0</td>
+<td>0x00 0x01</td>
+<td>2 bytes, message length</td>
+</tr>
+<tr><td>2</td>
+<td>0x65</td>
+<td>1 byte, packet type</td>
+</tr>
+<tr><td>3</td>
+<td>0x00 0x00 …</td>
+<td>5 padding bytes</td>
+</tr>
+</tbody>
+</table>
+<p>Packet 3, Message Containing Move Packet</p>
+<h2>
+Encryption</h2>
+<p>To make eavesdropping a bit more difficult, the communication between client and server is encrypted with XTEA. Encrypting and decrypting is done with one 128-bit key [
+2
+].</p>
+<h3>XTEA and RSA</h3>
+<p>There is one problem with using XTEA for encrypting and decrypting data between client and server. The client and server have to exchange the XTEA key; in order for the server to know with which XTEA key the client is encrypting its messages, the XTEA key has to be sent from client to server, over the network… Anyone could intercept the XTEA key and thus decrypt further communication between client and server, making encryption useless.</p>
+<p>Now RSA comes at play. RSA is a public-key cryptographic algorithm [
+3
+]. A public-key algorithm uses two keys, a public key and a private key. Anyone with the public key can encrypt data, but decryption can only be done with the private key. This is exactly what Tibia uses to exchange the XTEA key.</p>
+<p>The Tibia client knows the public key, but not the private key, the Tibia server knows both keys. When logging in, the Tibia client generates a 128-bit XTEA key. This key, along with the login data, is encrypted using the public key. This encrypted data is sent to the server. The server then decrypts the message with the private key and then knows which XTEA key the client is using. From then on, communication between client and server can be safely decrypted with the agreed XTEA key.</p>
+<h3>Why XTEA?</h3>
+<p>You might ask yourself why RSA is not used to encrypt all communication between client and server. Well, the XTEA algorithm is more efficient than the RSA algorithm, and efficiency is very important in real-time multiplayer games.</p>
+<p>For example, you are hunting some monsters and your health is very low. You use a health potion:</p>
+RSA scenario. While your health-potion-packet gets decrypted, you get more damage dealt and you die;
+<li>XTEA scenario. XTEA decrypts the health-potion-packet very fast and no one gets the opportunity to deal more damage before healing yourself.
+
+<h1>Reverse-Engineering the Tibia Client</h1>
+<p>The previous section discussed the encryption and decryption of messages. The RSA and XTEA functions are implemented by the Tibia client. We do not want to implement the XTEA and RSA algorithms in the bot, let’s just use the existing functions from the Tibia client!</p>
+<p>By reverse-engineering the client, we want to find some useful functions that we can reuse and even intercept. We want to be able to create unencrypted messages and send them to the server, and we want to be able to hook unencrypted incoming messages. So the functions we are interested in are the following:</p>
+The function that takes an unencrypted message and encrypts that message with XTEA and sends the encrypted message to the server. When we can reuse that function we don’t have to implement the XTEA algorithm.</li>
+<li>The function that parses an unencrypted message. We want to log incoming messages, and we want to hook this function to be able to fake incoming messages. See the following section about hooking.
+<h2>Example – Finding the Internal Send Function</h2>
+<p>Here is an example that demonstrates how to find the internal send function in the Linux Tibia client.</p>
+<p>First we want the whole assembler dump of the Tibia client. We can get this by executing the following command:</p>
+<p>objdump –d Tibia &gt; Tibia.asm</p>
+<p>The 
+Tibia.asm
+&nbsp;file now contains the assembler code of the Tibia client. We will need this assembler dump later.</p>
+<p>Next we will launch the Tibia client in the GDB debugger.</p>
+<p>gdb --args ./Tibia</p>
+<p>GNU gdb (GDB) 7.5-ubuntu</p>
+<p>Copyright (C) 2012 Free Software Foundation, Inc.</p>
+<p>License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;</p>
+<p>This is free software: you are free to change and redistribute it.</p>
+<p>There is NO WARRANTY, to the extent permitted by law. &nbsp;Type "show copying"</p>
+<p>and "show warranty" for details.</p>
+<p>This GDB was configured as "i686-linux-gnu".</p>
+<p>For bug reporting instructions, please see:</p>
+<p>&lt;http://www.gnu.org/software/gdb/bugs/&gt;...</p>
+<p>Reading symbols from /home/gillis/programs/tibia981/Tibia...(no debugging symbols found)...done.</p>
+<p>(gdb) run</p>
+<p>Starting program: /home/gillis/programs/tibia981/Tibia</p>
+<p>Tibia will now launch. Next we log in with the character of choice. After we are logged in we set a breakpoint on the syscall
+write.</p>
+<p>(gdb) break write</p>
+<p>From now on, when we send a message to the server, the client will pause and the GDB console will prompt. Just try to move or say something and the client will pause. When the client pauses, we want to know what caused this call to the 
+write
+&nbsp;function. This way, we can backtrace to higher level functions and eventually find the internal Tibia function.</p>
+<p>(gdb) backtrace</p>
+<p>#0 &nbsp;write () at ../sysdeps/unix/syscall-template.S:82</p>
+<p>#1 &nbsp;0x082f9af4 in ?? ()</p>
+<p>#2 &nbsp;0x082faa31 in ?? ()</p>
+<p>#3 &nbsp;0x080ad1bb in ?? ()</p>
+<p>#4 &nbsp;0x082933dd in ?? ()</p>
+<p>#5 &nbsp;0x082954dd in ?? ()</p>
+<p>#6 &nbsp;0x081420e3 in ?? ()</p>
+<p>#7 &nbsp;0x0828b8ea in ?? ()</p>
+<p>#8 &nbsp;0x0832b709 in ?? ()</p>
+<p>#9 &nbsp;0x0832c416 in ?? ()</p>
+<p>#10 0xb7ae24d3 in __libc_start_main (main=0x832c2b0, argc=1, </p>
+<p>&nbsp; &nbsp; ubp_av=0xbffff2f4, init=0x83a1890, fini=0x83a1880, </p>
+<p>&nbsp; &nbsp; rtld_fini=0xb7fed270 &lt;_dl_fini&gt;, stack_end=0xbffff2ec) at libc-start.c:226</p>
+<p>#11 0x0804d281 in ?? ()</p>
+<p>Now we can see the function calls that brought us to this 
+write
+&nbsp;call. It’s time to open the 
+Tibia.asm
+&nbsp;file and find the functions on the last two backtraces, 
+#1
+&nbsp;and 
+#2
+.</p>
+<p>We start with backtrace 
+#1
+. We see that the call at 
+0x082f9af4
+&nbsp;is a system call to the write function. And we also see that the pointer and the length of the buffer are stored in 
+0x4(%esp)
+&nbsp;and 
+0x8(%esp),
+&nbsp;which are the second and third argument to the 
+write
+&nbsp;function.</p>
+<p>Then we look at backtrace 
+#2
+. At 
+0x82faa2e
+&nbsp;the function in backtrace 
+#1
+&nbsp;is called. We see that we pass 
+$0x85d9880
+&nbsp;as second argument and 
+%edx
+&nbsp;as third argument. It is clear that the buffer containing the data is located at address 
+0x85d9880
+. Now we still need to know how the length got in 
+%edx
+. So we need to look who wrote to 
+%edx
+. So we look up and we see that 
+mov -0x70(%ebp),%edx
+&nbsp;writes to 
+%edx
+. Thus the length is stored in 
+-0x70(%ebp)
+. But what value does that one contain? We look up, and up, and we see this instruction 
+mov %esi,-0x70(%ebp)
+. The length came from 
+%esi
+! But where does 
+%esi
+&nbsp;come from? 
+%esi
+&nbsp;comes from 
+-0x2(%eax)
+. Finally, we see that 
+%eax
+&nbsp;is a pointer to 
+0x85da088
+. So the length of the buffer is store at the address 
+0x85da088
+.</p>
+<p>Now we can write unencrypted data to the buffer, 
+0x85d9880
+, write the length of our unencrypted data to 
+0x85da088
+, and then call the function of 
+#2
+, 
+0x82fa8f0
+. This will encrypt our message with XTEA and send it to the server!</p>
+
+<p>Snippet 1, Backtrace of <code>#1</code></p>
+<pre><code>82f9ab0:&nbsp;&nbsp;&nbsp;&nbsp;push   %ebp
+82f9ab1:&nbsp;&nbsp;&nbsp;&nbsp;mov    %esp,%ebp
+82f9ab3:&nbsp;&nbsp;&nbsp;&nbsp;push   %edi
+82f9ab4:&nbsp;&nbsp;&nbsp;&nbsp;push   %esi
+82f9ab5:&nbsp;&nbsp;&nbsp;&nbsp;push   %ebx
+82f9ab6:&nbsp;&nbsp;&nbsp;&nbsp;sub    $0x1c,%esp
+82f9ab9:&nbsp;&nbsp;&nbsp;&nbsp;mov    0x10(%ebp),%eax
+82f9abc:&nbsp;&nbsp;&nbsp;&nbsp;mov    0x8(%ebp),%edi
+82f9abf:&nbsp;&nbsp;&nbsp;&nbsp;mov    0xc(%ebp),%esi
+82f9ac2:&nbsp;&nbsp;&nbsp;&nbsp;test   %eax,%eax
+82f9ac4:&nbsp;&nbsp;&nbsp;&nbsp;jle    82f9b40 &lt;_ZNSt16invalid_argumentD0Ev+0x2a2f40&gt;
+82f9ac6:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,%ebx
+82f9ac8:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x2,-0x10(%ebp)
+82f9acf:&nbsp;&nbsp;&nbsp;&nbsp;jmp    82f9ae4 &lt;_ZNSt16invalid_argumentD0Ev+0x2a2ee4&gt;
+82f9ad1:&nbsp;&nbsp;&nbsp;&nbsp;lea    0x0(%esi,%eiz,1),%esi
+82f9ad8:&nbsp;&nbsp;&nbsp;&nbsp;test   %eax,%eax
+82f9ada:&nbsp;&nbsp;&nbsp;&nbsp;jle    82f9b12 &lt;_ZNSt16invalid_argumentD0Ev+0x2a2f12&gt;
+82f9adc:&nbsp;&nbsp;&nbsp;&nbsp;sub    %eax,%ebx
+82f9ade:&nbsp;&nbsp;&nbsp;&nbsp;add    %eax,%esi
+82f9ae0:&nbsp;&nbsp;&nbsp;&nbsp;test   %ebx,%ebx
+82f9ae2:&nbsp;&nbsp;&nbsp;&nbsp;jle    82f9b40 &lt;_ZNSt16invalid_argumentD0Ev+0x2a2f40&gt;
+82f9ae4:&nbsp;&nbsp;&nbsp;&nbsp;mov    %ebx,0x8(%esp) ;arg 3, length of the buffer
+82f9ae8:&nbsp;&nbsp;&nbsp;&nbsp;mov    %esi,0x4(%esp) ;arg 2, pointer to the buffer
+82f9aec:&nbsp;&nbsp;&nbsp;&nbsp;mov    %edi,(%esp)
+82f9aef:&nbsp;&nbsp;&nbsp;&nbsp;call   804c678 <write@plt> ;write syscall
+82f9af4:&nbsp;&nbsp;&nbsp;&nbsp;cmp    $0xffffffff,%eax
+82f9af7:&nbsp;&nbsp;&nbsp;&nbsp;jne    82f9ad8 &lt;_ZNSt16invalid_argumentD0Ev+0x2a2ed8&gt;
+82f9af9:&nbsp;&nbsp;&nbsp;&nbsp;call   804c8a8 &lt;__errno_location@plt&gt;
+82f9afe:&nbsp;&nbsp;&nbsp;&nbsp;mov    (%eax),%eax
+82f9b00:&nbsp;&nbsp;&nbsp;&nbsp;cmp    $0x4,%eax
+82f9b03:&nbsp;&nbsp;&nbsp;&nbsp;nop
+82f9b04:&nbsp;&nbsp;&nbsp;&nbsp;lea    0x0(%esi,%eiz,1),%esi
+82f9b08:&nbsp;&nbsp;&nbsp;&nbsp;je     82f9ae0 &lt;_ZNSt16invalid_argumentD0Ev+0x2a2ee0&gt;
+82f9b0a:&nbsp;&nbsp;&nbsp;&nbsp;cmp    $0xb,%eax
+82f9b0d:&nbsp;&nbsp;&nbsp;&nbsp;lea    0x0(%esi),%esi
+82f9b10:&nbsp;&nbsp;&nbsp;&nbsp;je     82f9b20 &lt;_ZNSt16invalid_argumentD0Ev+0x2a2f20&gt;
+82f9b12:&nbsp;&nbsp;&nbsp;&nbsp;add    $0x1c,%esp
+82f9b15:&nbsp;&nbsp;&nbsp;&nbsp;xor    %eax,%eax
+82f9b17:&nbsp;&nbsp;&nbsp;&nbsp;pop    %ebx
+82f9b18:&nbsp;&nbsp;&nbsp;&nbsp;pop    %esi
+82f9b19:&nbsp;&nbsp;&nbsp;&nbsp;pop    %edi
+82f9b1a:&nbsp;&nbsp;&nbsp;&nbsp;pop    %ebp
+82f9b1b:&nbsp;&nbsp;&nbsp;&nbsp;ret    
+</write@plt></code></pre>
+
+<p>Snippet 2, Backtrace of <code>#2</code></p>
+<pre><code>82fa8f0:&nbsp;&nbsp;&nbsp;&nbsp;push   %ebp
+82fa8f1:&nbsp;&nbsp;&nbsp;&nbsp;mov    %esp,%ebp
+82fa8f3:&nbsp;&nbsp;&nbsp;&nbsp;push   %edi
+82fa8f4:&nbsp;&nbsp;&nbsp;&nbsp;push   %esi
+82fa8f5:&nbsp;&nbsp;&nbsp;&nbsp;push   %ebx
+82fa8f6:&nbsp;&nbsp;&nbsp;&nbsp;sub    $0x8c,%esp
+82fa8fc:&nbsp;&nbsp;&nbsp;&nbsp;mov    0x85d9860,%ebx
+82fa902:&nbsp;&nbsp;&nbsp;&nbsp;movzbl 0x8(%ebp),%eax
+82fa906:&nbsp;&nbsp;&nbsp;&nbsp;test   %ebx,%ebx
+82fa908:&nbsp;&nbsp;&nbsp;&nbsp;je     82faa31 &lt;_ZNSt16invalid_argumentD0Ev+0x2a3e31&gt;
+82fa90e:&nbsp;&nbsp;&nbsp;&nbsp;test   %al,%al
+82fa910:&nbsp;&nbsp;&nbsp;&nbsp;je     82faa3c &lt;_ZNSt16invalid_argumentD0Ev+0x2a3e3c&gt;
+82fa916:&nbsp;&nbsp;&nbsp;&nbsp;mov    0x85da088,%eax ;0x85da088 pointer to length
+82fa91b:&nbsp;&nbsp;&nbsp;&nbsp;lea    -0x6(%eax),%edi
+82fa91e:&nbsp;&nbsp;&nbsp;&nbsp;lea    -0x2(%eax),%esi ;-0x2(%eax) contains length
+82fa921:&nbsp;&nbsp;&nbsp;&nbsp;test   $0x7,%edi
+82fa927:&nbsp;&nbsp;&nbsp;&nbsp;mov    %esi,-0x70(%ebp) ;%esi contains length
+82fa92a:&nbsp;&nbsp;&nbsp;&nbsp;je     82fa95c &lt;_ZNSt16invalid_argumentD0Ev+0x2a3d5c&gt;
+82fa92c:&nbsp;&nbsp;&nbsp;&nbsp;lea    -0x5(%eax),%ebx
+82fa92f:&nbsp;&nbsp;&nbsp;&nbsp;nop
+82fa930:&nbsp;&nbsp;&nbsp;&nbsp;call   83659f0 &lt;_ZNSt16invalid_argumentD0Ev+0x30edf0&gt;
+82fa935:&nbsp;&nbsp;&nbsp;&nbsp;movzbl %al,%eax
+82fa938:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,0x4(%esp)
+82fa93c:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85da080,(%esp)
+82fa943:&nbsp;&nbsp;&nbsp;&nbsp;call   8392fc0 &lt;_ZNSt16invalid_argumentD0Ev+0x33c3c0&gt;
+82fa948:&nbsp;&nbsp;&nbsp;&nbsp;lea    0x4(%ebx),%eax
+82fa94b:&nbsp;&nbsp;&nbsp;&nbsp;mov    %ebx,%edi
+82fa94d:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,-0x70(%ebp)
+82fa950:&nbsp;&nbsp;&nbsp;&nbsp;mov    %ebx,%eax
+82fa952:&nbsp;&nbsp;&nbsp;&nbsp;add    $0x1,%ebx
+82fa955:&nbsp;&nbsp;&nbsp;&nbsp;and    $0x7,%eax
+82fa958:&nbsp;&nbsp;&nbsp;&nbsp;test   %eax,%eax
+82fa95a:&nbsp;&nbsp;&nbsp;&nbsp;jne    82fa930 &lt;_ZNSt16invalid_argumentD0Ev+0x2a3d30&gt;
+82fa95c:&nbsp;&nbsp;&nbsp;&nbsp;movzwl -0x70(%ebp),%eax
+82fa960:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x0,0x85da088
+82fa967:&nbsp;&nbsp;&nbsp;&nbsp;
+82fa96a:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,-0x74(%ebp)
+82fa96d:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,0x4(%esp)
+82fa971:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85da080,(%esp)
+82fa978:&nbsp;&nbsp;&nbsp;&nbsp;call   8392c50 &lt;_ZNSt16invalid_argumentD0Ev+0x33c050&gt;
+82fa97d:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x0,0x4(%esp)
+82fa984:&nbsp;&nbsp;&nbsp;&nbsp;
+82fa985:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85da080,(%esp)
+82fa98c:&nbsp;&nbsp;&nbsp;&nbsp;call   83928d0 &lt;_ZNSt16invalid_argumentD0Ev+0x33bcd0&gt;
+82fa991:&nbsp;&nbsp;&nbsp;&nbsp;lea    -0x6(%esi),%eax
+82fa994:&nbsp;&nbsp;&nbsp;&nbsp;movzwl %ax,%eax
+82fa997:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,0x4(%esp)
+82fa99b:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85da080,(%esp)
+82fa9a2:&nbsp;&nbsp;&nbsp;&nbsp;call   8392c50 &lt;_ZNSt16invalid_argumentD0Ev+0x33c050&gt;
+82fa9a7:&nbsp;&nbsp;&nbsp;&nbsp;mov    -0x70(%ebp),%esi
+82fa9aa:&nbsp;&nbsp;&nbsp;&nbsp;add    $0x1,%esi
+82fa9ad:&nbsp;&nbsp;&nbsp;&nbsp;cmp    $0x5,%esi
+82fa9b0:&nbsp;&nbsp;&nbsp;&nbsp;jle    82fa9d5 &lt;_ZNSt16invalid_argumentD0Ev+0x2a3dd5&gt;
+82fa9b2:&nbsp;&nbsp;&nbsp;&nbsp;mov    $0x6,%ebx
+82fa9b7:&nbsp;&nbsp;&nbsp;&nbsp;nop
+82fa9b8:&nbsp;&nbsp;&nbsp;&nbsp;lea    0x85d9880(%ebx),%eax
+82fa9be:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,0x4(%esp)
+82fa9c2:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85de54c,(%esp)
+82fa9c9:&nbsp;&nbsp;&nbsp;&nbsp;call   838fe30 &lt;_ZNSt16invalid_argumentD0Ev+0x339230&gt;
+82fa9ce:&nbsp;&nbsp;&nbsp;&nbsp;add    $0x8,%ebx
+82fa9d1:&nbsp;&nbsp;&nbsp;&nbsp;cmp    %esi,%ebx
+82fa9d3:&nbsp;&nbsp;&nbsp;&nbsp;jle    82fa9b8 &lt;_ZNSt16invalid_argumentD0Ev+0x2a3db8&gt;
+82fa9d5:&nbsp;&nbsp;&nbsp;&nbsp;mov    -0x74(%ebp),%eax
+82fa9d8:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x0,0x85da088
+82fa9df:&nbsp;&nbsp;&nbsp;&nbsp;
+82fa9e2:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85da080,(%esp)
+82fa9e9:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,0x4(%esp)
+82fa9ed:&nbsp;&nbsp;&nbsp;&nbsp;call   8392c50 &lt;_ZNSt16invalid_argumentD0Ev+0x33c050&gt;
+82fa9f2:&nbsp;&nbsp;&nbsp;&nbsp;mov    %edi,0x4(%esp)
+82fa9f6:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85d9886,(%esp)
+82fa9fd:&nbsp;&nbsp;&nbsp;&nbsp;call   8394a60 &lt;_ZNSt16invalid_argumentD0Ev+0x33de60&gt;
+82faa02:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,0x4(%esp)
+82faa06:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85da080,(%esp)
+82faa0d:&nbsp;&nbsp;&nbsp;&nbsp;call   83928d0 &lt;_ZNSt16invalid_argumentD0Ev+0x33bcd0&gt;
+82faa12:&nbsp;&nbsp;&nbsp;&nbsp;mov    0x85d9860,%eax
+82faa17:&nbsp;&nbsp;&nbsp;&nbsp;mov    -0x70(%ebp),%edx ;-70(%ebp) contains length
+82faa1a:&nbsp;&nbsp;&nbsp;&nbsp;mov    (%eax),%ecx
+82faa1c:&nbsp;&nbsp;&nbsp;&nbsp;add    $0x2,%edx ;%edx contains length
+82faa1f:&nbsp;&nbsp;&nbsp;&nbsp;mov    %edx,0x8(%esp) ;arg 3, length of the buffer
+82faa23:&nbsp;&nbsp;&nbsp;&nbsp;movl   $0x85d9880,0x4(%esp) ;arg 2, pointer to the buffer
+82faa2a:&nbsp;&nbsp;&nbsp;&nbsp;
+82faa2b:&nbsp;&nbsp;&nbsp;&nbsp;mov    %eax,(%esp)
+82faa2e:&nbsp;&nbsp;&nbsp;&nbsp;call   *0x10(%ecx) ;call to lower-level write function
+82faa31:&nbsp;&nbsp;&nbsp;&nbsp;add    $0x8c,%esp
+82faa37:&nbsp;&nbsp;&nbsp;&nbsp;pop    %ebx
+82faa38:&nbsp;&nbsp;&nbsp;&nbsp;pop    %esi
+82faa39:&nbsp;&nbsp;&nbsp;&nbsp;pop    %edi
+82faa3a:&nbsp;&nbsp;&nbsp;&nbsp;pop    %ebp
+82faa3b:&nbsp;&nbsp;&nbsp;&nbsp;ret    
+
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<h1>Hooking Functions</h1>
+<p>Now that we have found the pointers to some functions, we also want to be able to change the behavior of those functions.</p>
+<p>To make this possible we are going to hook those functions.</p>
+<h2>
+Hooking</h2>
+<p>The basic idea of hooking is writing a 
+jmp
+&nbsp;instruction – that jumps to our hooking function – to the beginning of the hooked function [
+4
+].</p>
+<p>Suppose we have a 
+function_A
+&nbsp;and we want to redirect the execution of 
+function_A
+&nbsp;to 
+function_B
+. As we can see in the image below, 
+function_A
+&nbsp;that starts on address 
+0x4010000
+. It starts with the standard bookkeeping instructions, namely pushing the base pointer on the stack and allocating memory on the stack. Almost every function does this. So what we basically want to do is, to overwrite these bookkeeping instructions with a 
+jmp
+&nbsp;instruction.</p>
+<p>
+</p><p>The 
+jmp
+&nbsp;instruction takes five bytes, one byte for its opcode, and four bytes that contain the (relative) address of the jump destination. We have to put a 
+nop
+&nbsp;instruction after the 
+jmp
+&nbsp;instruction so we overwrite the full six bytes of the functions bookkeeping instructions and so the next instruction points to 
+push ebx
+&nbsp;again.</p>
+<p>We call the bookkeeping instructions that are overwritten stolen bytes.</p>
+<h2>
+Trampolines</h2>
+<p>But what will happen now if we call 
+function_A
+? The base pointer will not be pushed to the stack anymore, and we will not allocate any memory on the stack anymore because we overwrote those instructions… And what if we want to call the original function without redirecting to 
+function_B
+?</p>
+<p>This is where trampolines come in. To execute 
+function_A
+, we need to be able to execute the bytes we’ve overwritten in some way. Below you can see how this is done. 
+function_A_gate
+&nbsp;executes the overwritten bytes of 
+function_A
+. When that is done, it jumps to the first &nbsp;un-overwritten instruction of 
+function_A
+, i.e. 
+push ebx
+.</p>
+<p>
+</p><h2>
+Detection</h2>
+<p>A program can easily detect if a function of its own is hooked [
+4
+].</p>
+<p>Since we overwrite the first bytes of the hooked function, it is very simple to detect the hook. We only need to check if the first byte of the function equals to 0xE9, the opcode of the 
+jmp
+&nbsp;instruction.</p>
+<p>Snippet 3, Hook Detection</p>	
+<pre><code>if (*function_A == 0xE9) {
+&nbsp; &nbsp; printf("Hook detected in function A.\n");
+}
+</code></pre>
+<p>There are many ways to get around this detection, but in this project we don’t really care if the hook gets detected. First of all, there is no known hook checking code in the Tibia client. Secondly, we will be able to control the whole program. If any reporting is done to the server, we can easily intercept it.</p>
 
-<h3>Designer Templates</h3>
+<h1>Injecting a Shared Library</h1>
+<p>In the previous section, you read how functions can be hooked. But how can we hook functions of an external process, i.e. the Tibia client? To make that possible, we must inject and execute the hooking code in the memory of the Tibia client.</p>
+<p>To inject our hooking code we have to put it in a shared library. Then we can inject the hooking code via the shared library into the Tibia client.</p>
+<p>In this section, we will assume we have two important functions in that shared library, one to initialize the hooks and one to clean up the hooks. We will call them 
+hook_constructor
+&nbsp;and 
+hook_destructor
+. </p>
+<h2>
+Windows</h2>
+<p>Windows’ implementation of a shared library is the dynamic-link library, or DLL
+<sup>[1]
+</sup>
+. For simplicity, DLL will be referred to as a shared library in this section.</p>
+<p>There are several methods to inject a shared library in Windows. This paper will discuss two methods. The first method uses 
+SetWindowsHookEx
+&nbsp;[
+5
+], a function that installs an event hook in an external process. The second method uses 
+CreateRemoteThread
+&nbsp;[
+6
+], a function that creates a thread in an external process.</p>
+<h3>The SetWindowsHookEx Method</h3>
+<p>This method uses Windows hooks – not to confuse with hooks in the previous section – to inject the shared library into an external process. Before we go into detail, what is a Windows hook?</p>
+<p>“A hook is a mechanism by which an application can intercept events, such as messages, mouse actions, and keystrokes. A function that intercepts a particular type of event is known as a hook procedure. A hook procedure can act on each event it receives, and then modify or discard the event.” [
+7
+]</p>
+<p>So with a Windows hook we can get notified about events that happen in a particular process. This could be the process we are working in, or an external process. To install a hook we use the function 
+SetWindowsHookEx. Below is its definition from MSDN:</p>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<pre><code>
+HHOOK WINAPI SetWindowsHookEx(
+&nbsp; _In_ &nbsp;int idHook,
+&nbsp; _In_ &nbsp;HOOKPROC lpfn,
+&nbsp; _In_ &nbsp;HINSTANCE hMod,
+&nbsp; _In_ &nbsp;DWORD dwThreadId
+);
+</code></pre>
 
-<h3>Rather Drive Stick?</h3>
+<p>It accepts the following parameters:</p>
+<ul>
+	<li><code>int idHook</code>: The type of event we want to hook, e.g. mouse clicks, keyboard input;</li>
+	<li><code>HOOKPROC lpfn</code>: Pointer to the hook procedure;</li>
+	<li><code>HINSTANCE hMod</code>: Handle to the shared library containing the hook procedure;</li>
+	<li><code>DWORD dwThreadId</code>: Identifier of the thread with which the hook procedure is to be associated.</li>
+</ul>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>From the documentation we can derive that, if we install a hook in a thread that belongs to a different process, the hook procedure must be defined in a shared library. The complete shared library, so not only the hook procedure but everything else in the library too (!), will then be mapped into the address space of the hooked thread. This is exactly what we want! In the shared library we can put the call to 
+hook_constructor, together with a dummy hook procedure. We then install the dummy hook procedure which causes the whole shared library to be loaded in the hooked thread.</p>
+<p>In case it is not entirely clear, the snippets below show some example code.</p>
 
-<h3>Authors and Contributors</h3>
+<p>Snippet 4, Example Code for the Injected Shared Library</p>
+<pre><code>extern "C" __declspec(dllexport) BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
+&nbsp; &nbsp; switch (fdwReason) {
+&nbsp; &nbsp; case DLL_PROCESS_ATTACH:
+&nbsp; &nbsp; &nbsp; &nbsp; hook_constructor();
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; case DLL_PROCESS_DETACH:
+&nbsp; &nbsp; &nbsp; &nbsp; hook_destructor();
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; }
+&nbsp; &nbsp; return TRUE;
+}
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+extern "C" __declspec(dllexport) LRESULT CALLBACK DummyCallback(int nCode, WPARAM wParam, LPARAM lParam) {
+&nbsp; &nbsp; return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+</code></pre>
+<p>The above snippet shows example code for the shared library. The 
+DllMain
+&nbsp;function is called when the shared library is mapped in the hooked process [
+8
+]. It calls the 
+hook_constructor
+&nbsp;function when it is attached to the process and it calls the 
+hook_destructor
+&nbsp;when it is detached from the process. You can also see the 
+DummyCallback
+&nbsp;function. It does nothing but calling the next hook because it follows the chain-of-responsibility design pattern. We need this function though, else we cannot call 
+SetWindowsHookEx
+.</p>
+<p>We also need an injector that injects the shared library into the Tibia client. We assume we have the main thread ID of the Tibia client in the variable 
+dwThreadId
+.</p>
 
-<h3>Support or Contact</h3>
+<p>Snippet 5, Example Code for the SetWindowsHookEx Injector</p>
+<pre><code>HMODULE library = LoadLibraryA(libraryPath);
+HOOKPROC hookCallback = (HOOKPROC) GetProcAddress(library, "DummyCallback@12");
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-      <footer>
-        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
-      </footer>
-    </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		
-  </body>
+// Install the hook
+SetWindowsHookEx(WH_GETMESSAGE, hookCallback, library, dwThreadId);
+</code></pre>
+
+<p>First, it loads the shared library we created above. It then loads the address of the dummy callback. Finally we install the dummy callback for the message 
+WH_GETMESSAGE
+&nbsp;in the thread with thread ID 
+dwThreadId
+.</p>
+<h3>The 
+CreateRemoteThread
+&nbsp;Method</h3>
+<p>The 
+CreateRemoteThread
+&nbsp;method is more straightforward. It doesn’t install a Windows hook to map the shared library. It just makes the external process execute a call to 
+LoadLibrary
+. How? Well, let’s take a look at the definition of 
+CreateRemoteThread
+&nbsp;[
+6
+]:</p>
+<pre><code>HANDLE WINAPI CreateRemoteThread(
+&nbsp; _In_ &nbsp; HANDLE hProcess,
+&nbsp; _In_ &nbsp; LPSECURITY_ATTRIBUTES lpThreadAttributes,
+&nbsp; _In_ &nbsp; SIZE_T dwStackSize,
+&nbsp; _In_ &nbsp; LPTHREAD_START_ROUTINE lpStartAddress,
+&nbsp; _In_ &nbsp; LPVOID lpParameter,
+&nbsp; _In_ &nbsp; DWORD dwCreationFlags,
+&nbsp; _Out_ &nbsp;LPDWORD lpThreadId
+);
+</code></pre>
+<p>What it basically does is start a thread in an external process. When this thread starts, the function at 
+lpStartAddress
+&nbsp;is called. The type of this function is 
+LPTHREAD_START_ROUTINE
+, or 
+DWORD (LPVOID lpThreadParameter)
+&nbsp;[
+9
+
+]
+
+.</p>
+<p>Now let’s take a look at the definition of 
+LoadLibrary
+&nbsp;[
+10
+
+]
+
+:</p>
+<pre><code>HMODULE WINAPI LoadLibrary(
+&nbsp; _In_ &nbsp;LPCTSTR lpFileName
+);
+</code></pre>
+<p>As you can see, this function can be used as argument to the
+&nbsp;lpStartAddress
+&nbsp;parameter, because it matches the type of 
+LPTHREAD_START_ROUTINE
+. Well, it doesn’t match it entirely, but they both accept 32-bit parameters, it’ll just get converted from 
+LPVOID
+&nbsp;to 
+LPCSTR
+.</p>
+<p>So what we are going to do is, call the 
+CreateRemoteThread
+&nbsp;function with a pointer to 
+LoadLibrary
+&nbsp;for 
+lpStartAddress
+&nbsp;and a pointer to the shared library we want to load as 
+lpParameter
+. 
+CreateRemoteThread
+&nbsp;will then create the thread in the external process and call 
+LoadLibrary
+&nbsp;with the pointer to the shared library we want to load. In this case, the shared library we want to load is the library we created that hooks the Tibia functions.</p>
+<p>The example code for the shared library is the same as the previous, i.e. Snippet 4, except that we don’t need the dummy hook procedure anymore.</p>
+
+<p>Snippet 6, Example Code for the CreateRemoteThread Injector</p>
+<pre><code>LPVOID loadLibrary = (LPVOID) GetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
+LPVOID externalLibraryPath = (LPVOID) VirtualAllocEx(hProcess, NULL, strlen(libraryPath) + 1, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+&nbsp;
+// Write the shared library path
+WriteProcessMemory(hProcess, (LPVOID) externalLibraryPath, libraryPath strlen(libraryPath) + 1, NULL);
+
+// Run LoadLibraryA in a separate thread and wait for it to finish
+HANDLE thread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE) loadLibrary, (LPVOID) externalLibraryPath, 0, NULL);
+WaitForSingleObject(thread, INFINITE);
+
+// Clean up the thread and the external memory
+CloseHandle(thread);
+VirtualFreeEx(hProcess, (LPVOID) externalLibraryPath, 0, MEM_RELEASE);
+</code></pre>
+<p>We first get the pointer to the 
+LoadLibrary
+&nbsp;function. Then we allocate memory in the external process that will contain the argument for the 
+LoadLibrary
+&nbsp;call. We need to allocate that memory in the external process because 
+LoadLibrary
+&nbsp;will be called in that process, and it needs an argument that is defined in the address space of the external process.</p>
+<p>Secondly, we write the path name to the external allocated memory. In this case, it is the path to our shared library which contains the hooking code.</p>
+<p>And finally we execute the 
+LoadLibrary
+&nbsp;call in a thread of the external process. This causes the external process to call 
+LoadLibrary
+&nbsp;with our shared library path. The shared library will then be loaded in the external process. 
+DllMain
+&nbsp;will then be called and our hooking code will be executed.</p>
+<h2>
+Linux</h2>
+<p>In Linux there is one very simple method to inject a shared library. But first, you will need some information about the dynamic linker. The dynamic linker in Linux is a program, ld.so, is used to find shared libraries. [
+11
+]</p>
+<p>The programs ld.so and ld-linux.so* find and load the shared libraries needed by a program, prepare the program to run, and then run it.</p>
+<pre>The shared libraries needed by the program are searched for in the following order:
+  * (ELF only) Using the directories specified in the DT_RPATH dynamic section attribute of the binary if present and DT_RUNPATH attribute does not exist. Use of DT_RPATH is deprecated.
+  * Using the environment variable LD_LIBRARY_PATH. Except if the executable is a set-user-ID/set-group-ID binary, in which case it is ignored.
+  * (ELF only) Using the directories specified in the DT_RUNPATH dynamic section attribute of the binary if present.
+  * From the cache file /etc/ld.so.cache which contains a compiled list of candidate libraries previously found in the augmented library path. If, however, the binary was linked with the -z nodeflib linker option, libraries in the default library paths are skipped.
+  * In the default path /lib, and then /usr/lib. If the binary was linked with the -z nodeflib linker option, this step is skipped
+</pre>
+<p>What we are interested in are the environment variables 
+LD_LIBRARY_PATH
+&nbsp;and 
+LD_PRELOAD
+. As can be read in the quote above, they allow us to load custom shared libraries upon running a program. 
+LD_PRELOAD
+&nbsp;is exactly what we need:</p>
+<p>A whitespace-separated list of additional, user-specified, ELF shared libraries to be loaded before all others. This can be used to selectively override functions in other shared libraries. For set-user-ID/set-group-ID ELF binaries, only libraries in the standard search directories that are also set-user-ID will be loaded. [
+11
+]</p>
+<p>So 
+LD_PRELOAD
+&nbsp;allows us to load an extra shared library into the program we are about to run. For example, when we execute this command:</p>
+<pre><code>LD_PRELOAD=./library.so ./executable</code></pre>
+<p>The 
+executable
+&nbsp;is executed with 
+library.so
+&nbsp;preloaded! In our case, the Tibia client is the executable, and the shared library is our library which hooks the functions. This is exactly what we need!</p>
+<p>But, we’re not completely there yet. We also need to be able to hook the functions. For that we need to run our hooking code, 
+hook_constructor
+, when the library is loaded in the executable. Luckily GCC provides us that functionality.</p>
+<p>The 
+constructor
+&nbsp;attribute causes the function to be called automatically before execution enters 
+main()
+. Similarly, the 
+destructor
+&nbsp;attribute causes the function to be called automatically after 
+main()
+&nbsp;completes or 
+exit()
+&nbsp;is called. Functions with these attributes are useful for initializing data that is used implicitly during the execution of the program. [
+12
+]</p>
+<p>So all we have to do is add the constructor and destructor attributes to the hooking functions, 
+hook_constructor
+&nbsp;and 
+hook_destructor
+&nbsp;in our shared library.</p>
+<pre><code>void hook_destructor() __attribute__((destructor));
+void hook_constructor() __attribute__((constructor));
+</code></pre>
+<p>These functions will now automatically be called upon loading and unloading the library.</p>
+
+<h1>Implementation</h1>
+<p>We’re finally ready to implement our bot API. The bot API will be a shared library that contains the 
+hook_constructor
+&nbsp;and 
+hook_destructor
+&nbsp;functions. It will also contain the cross-platform functions or attributes that make it able to be injected into the Tibia client. The graphical user interface and the plugin system will also be managed in this shared library.</p>
+<h2>
+Graphical User Interface with Qt</h2>
+<p>Qt is a cross-platform application framework. It makes it easy to make cross-platform GUIs or to make cross-platform networking a breeze. It also provides a plugin system, which we also use to make our bot more modular.</p>
+<h2>Hooking with Mologie Detours</h2>
+<p>Mologie Detours [
+13
+
+]
+
+&nbsp;provide us with an implementation of function hooks that works on both 32- and 64-bit machines and works with Windows and Unix.</p>
+<p>Below you find an example of hooking a function.</p>
+<p>Snippet 7, Hooking a Function</p>
+<pre><code>typedef int IncomingFunctionSignature();
+
+MologieDetours::Detour&lt;IncomingFunctionSignature*&gt;* inFunctionDetour = new MologieDetours::Detour&lt;IncomingFunctionSignature*&gt;((IncomingFunctionSignature*) inFunctionAddress, &amp;onIncomingMessage);
+
+int onIncomingMessage() {
+&nbsp; &nbsp; // Read the incoming message from the message buffer
+&nbsp; &nbsp; // Parse it and do some stuff with it
+
+&nbsp; &nbsp; // Call the original function
+&nbsp; &nbsp; return inFunctionDetour-&gt;GetOriginalFunction()();
+}
+</code></pre>
+<p>We first define the type of the function. It’s a function that returns an 
+int
+&nbsp;and takes no parameters. Next we hook the function by calling the constructor 
+MologieDetours::Detour
+&nbsp;with a pointer to the original function, and a pointer to the hooking function.</p>
+<p>The next time the hooked function gets called, the 
+onIncomingMessage
+&nbsp;function will be executed instead. </p>
+<h2>
+hook_constructor
+&nbsp;and 
+hook_destructor</h2>
+<p>The 
+hook_constructor
+&nbsp;function is the most important function in the bot. It creates the GUI, it manages the plugin system, and it installs the function hooks.</p>
+<p>Snippet 8, Constructor and Destructor Functions</p>
+<pre><code>#ifdef Q_OS_WIN
+DWORD WINAPI hook_thread(LPVOID) {
+#else
+void* hook_thread(void*) {
+#endif
+&nbsp; &nbsp; // Create the application and enter the main event loop
+&nbsp; &nbsp; application = new Application();
+&nbsp; &nbsp; application-&gt;initialize();
+&nbsp; &nbsp; application-&gt;exec();
+
+&nbsp; &nbsp; // When the application is done executing, clean up
+&nbsp; &nbsp; delete application;
+
+&nbsp; &nbsp; return 0;
+}
+
+void hook_constructor() __attribute__((constructor)) {
+&nbsp; &nbsp; // Create a new thread for Qt to run in
+#ifdef Q_OS_WIN
+&nbsp; &nbsp; thread = CreateThread(NULL, 0, hook_thread, NULL, 0, NULL);
+#else
+&nbsp; &nbsp; pthread_attr_t attr;
+&nbsp; &nbsp; pthread_attr_init(&amp;attr);
+&nbsp; &nbsp; pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_JOINABLE);
+&nbsp; &nbsp; pthread_create(&amp;thread, &amp;attr, hook_thread, NULL);
+#endif
+}
+
+void hook_destructor() __attribute__((destructor)) {
+&nbsp; &nbsp; // Put the quit signal on the application event loop
+&nbsp; &nbsp; QMetaObject::invokeMethod(application, "quit", Qt::QueuedConnection);
+
+&nbsp; &nbsp; // Wait for the Qt thread to finish
+#ifdef Q_OS_WIN
+&nbsp; &nbsp; WaitForSingleObject(thread, INFINITE);
+#else
+&nbsp; &nbsp; pthread_join(thread, NULL);
+#endif
+}
+</code></pre>
+<p>Qt needs a separate thread for its event-loop to run in. So we have to create a thread and initialize and run the Qt application in that thread.</p>
+<p>As you can see in Snippet 8, we launch the 
+hook_thread
+&nbsp;in the 
+hook_constructor
+. The 
+hook_thread
+&nbsp;then initializes the 
+Application
+, which is a subclass of 
+QApplication
+. The call 
+application-&gt;exec()
+&nbsp;runs the event-loop and it blocks until the application is exited.</p>
+<p>The 
+hook_destructor
+&nbsp;notifies the application that it needs to quit. This will cause 
+application-&gt;exec()
+&nbsp;in the 
+hook_thread
+&nbsp;to return, and the 
+hook_thread
+&nbsp;will finish. Meanwhile we wait for the 
+hook_thread
+&nbsp;to finish in the destructor, so that the application exits properly.</p>
+<h2>
+Intercepting Packets and Sending Custom Packets</h2>
+<p>The 
+Application
+&nbsp;constructor initializes the hook functions. It hooks the send- and receive-message functions. The Tibia client uses these functions to send messages to the server. So when Tibia client executes a hooked function, the hooking function gets called. The hooking functions get called in the Tibia thread, not in the Qt thread. But we want to parse the message in the Qt thread. To solve this, we use a thread-safe queue. When the client calls a hooked function, the message it is sending, or receiving, is put in the outgoing, or the incoming, message queue. The Qt thread is then notified that a message was sent, or received. It can then pop the message off the thread-safe queue and do something with it.</p>
+<p>“Do something with it” actually means letting the plugins know that this message was sent, or received. Each plugin can then do what it wants with it.</p>
+<h2>Plugin System</h2>
+<p>A plugin has to implement the following interface:</p>
+<pre><code>class PluginInterface {
+public:
+&nbsp; &nbsp; virtual ~PluginInterface() {}
+
+&nbsp; &nbsp; virtual void install(BotInterface*, SettingsInterface*) throw(RuntimeError) = 0;
+&nbsp; &nbsp; virtual void uninstall() = 0;
+};
+</code></pre>
+<p>When the bot API initializes it will load all plugins. If there are no errors loading the plugins, it will install them. This is just a function call to the virtual method 
+install
+&nbsp;with the bot API as argument.</p>
+<p>The plugin can then access different parts of the bot API. It can for example install a proxy for a certain incoming packet, see Snippet 9.</p>
+<h2>Example Plugins – Current Location on the Minimap</h2>
+<p>The minimap in the Tibia client is a representation of the real map. By using some colours, it shows a sketch of the real map. When we run in an unknown area, the Tibia client will log that area into the minimap. In the Tibia client you can only see a limited part of the minimap, see Figure 1.</p>
+<p>
+</p><p>Figure 1, Minimap in the Tibia Client</p>
+<p>The minimap files are saved on disk, so the Tibia client can restore them event after we quit the client. With that knowledge I have written a minimap plugin for the Tibia bot, using the plugin system.</p>
+<p>When the minimap plugin loads, it creates a new tab, called “Map”, see Figure 2. Then it loads the minimap and draws it in that tab. That’s it. Nothing special happens.</p>
+<p>But then I created another plugin, to demonstrate that we can intercept packets correctly. This plugin, the tracker plugin, listens for movement packets. You can see the corresponding code in Snippet 9.</p>
+
+<p>Snippet 9, Hooking Movement Packets</p>
+<pre><code>void TrackerPlugin::install(HookInterface* hook, SettingsInterface*) throw(RuntimeError) {
+&nbsp; &nbsp; proxies_ = hook-&gt;proxies();
+&nbsp; &nbsp; proxies_-&gt;addIncomingProxy(PacketInMapFull, this);
+&nbsp; &nbsp; proxies_-&gt;addIncomingProxy(PacketInMapTopRow, this);
+&nbsp; &nbsp; proxies_-&gt;addIncomingProxy(PacketInMapRightRow, this);
+&nbsp; &nbsp; proxies_-&gt;addIncomingProxy(PacketInMapBottomRow, this);
+&nbsp; &nbsp; proxies_-&gt;addIncomingProxy(PacketInMapLeftRow, this);
+&nbsp; &nbsp; proxies_-&gt;addIncomingProxy(PacketInFloorChangeUp, this);
+&nbsp; &nbsp; proxies_-&gt;addIncomingProxy(PacketInFloorChangeDown, this);
+}
+bool TrackerPlugin::handlePacket(PacketReader&amp; reader) {
+&nbsp; &nbsp; quint8 type = reader.readU8();
+
+&nbsp; &nbsp; switch (type) {
+&nbsp; &nbsp; case PacketInMapFull:
+&nbsp; &nbsp; &nbsp; &nbsp; position_ = reader.readPosition();
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; case PacketInMapTopRow:
+&nbsp; &nbsp; &nbsp; &nbsp; position_.y--;
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; case PacketInMapRightRow:
+&nbsp; &nbsp; &nbsp; &nbsp; position_.x++;
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; case PacketInMapBottomRow:
+&nbsp; &nbsp; &nbsp; &nbsp; position_.y++;
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; case PacketInMapLeftRow:
+&nbsp; &nbsp; &nbsp; &nbsp; position_.x--;
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; case PacketInFloorChangeUp:
+&nbsp; &nbsp; &nbsp; &nbsp; position_.x++;
+&nbsp; &nbsp; &nbsp; &nbsp; position_.y++;
+&nbsp; &nbsp; &nbsp; &nbsp; position_.z--;
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; case PacketInFloorChangeDown:
+&nbsp; &nbsp; &nbsp; &nbsp; position_.x--;
+&nbsp; &nbsp; &nbsp; &nbsp; position_.y--;
+&nbsp; &nbsp; &nbsp; &nbsp; position_.z++;
+&nbsp; &nbsp; &nbsp; &nbsp; break;
+&nbsp; &nbsp; }
+
+&nbsp; &nbsp; emit positionChanged(position_);
+
+&nbsp; &nbsp; return true;
+}
+</code></pre>
+<p>When the tracker plugin is installed in the bot, it adds an incoming proxy – just a hook for incoming packets – for movement packets. The proxy manager will then call the 
+handlePacket
+&nbsp;function when a packet of the given type is received.</p>
+<p>The 
+handlePacket
+&nbsp;function keeps track of our current position and emits a signal that our position has changed.</p>
+<p>The minimap plugin is connected to that signal and thus knows that the player has moved. The minimap plugin then shows the position marker on the view, see Figure 3.</p>
+<p>
+</p><p>Figure 2, Minimap Plugin</p>
+<p>
+</p><p>Figure 3, Minimap, Zoomed In, With Position Marker</p>
+<h2>Possibilities of Plugins</h2>
+<p>These plugins have endless possibilities. For example, we could make an autohunt plugin that automatically hunts creatures, and uses potions to heal ourselves. This could be done by adding waypoints to the autohunt plugin. These waypoints are then visited by sending “Move” packets to the server. When a creature enters the Tibia client window, we send an “Attack” packet to start attacking it. When it dies, we send an “Open Container” packet to its corpse to loot all the items.</p>
+
+<h1>Conclusion</h1>
+<p>This bot API is cross-platform. Both Windows and Linux support injection of shared libraries. The Qt framework also runs on both Windows and Linux and the library to hook functions is also cross-platform. By making this bot API cross-platform we open a whole new world for Linux players. At the time of writing, there are no other cross-platform bots available for Tibia.</p>
+<p>The Qt framework provides us with abstractions for a graphical user interface, networking, a plugin system, and much more. We could even make the bot API scriptable by using the QtScript module.</p>
+
+<h1>References</h1>
+
+
+
+<table><tbody><tr><td>[1]</td>
+<td>CipSoft. Tibia. [Online]. 
+http://www.tibia.com
+</td>
+</tr>
+<tr><td>[2]</td>
+<td>Wikipedia. XTEA. [Online]. 
+http://en.wikipedia.org/wiki/XTEA
+</td>
+</tr>
+<tr><td>[3]</td>
+<td>Wikipedia. RSA. [Online]. 
+http://en.wikipedia.org/wiki/RSA_(algorithm)
+</td>
+</tr>
+<tr><td>[4]</td>
+<td>J. Bremer. (2012, Jul.) Development &amp; Security. [Online]. 
+http://jbremer.org/x86-api-hooking-demystified
+</td>
+</tr>
+<tr><td>[5]</td>
+<td>MSDN. SetWindowsHookEx function (Windows). [Online]. 
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms644990(v=vs.85).aspx
+</td>
+</tr>
+<tr><td>[6]</td>
+<td>MSDN. CreateRemoteThread Function (Windows). [Online]. 
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms682437(v=vs.85).aspx
+</td>
+</tr>
+<tr><td>[7]</td>
+<td>MSDN. Hooks Overview (Windows). [Online]. 
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms644959(v=vs.85).aspx
+</td>
+</tr>
+<tr><td>[8]</td>
+<td>MSDN. DllMain Entry Point (Windows). [Online]. 
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms682583(v=vs.85).aspx
+</td>
+</tr>
+<tr><td><p>[9]</p></td>
+<td>MSDN. LPTHREAD_START_ROUTINE Function Pointer. [Online]. 
+http://msdn.microsoft.com/en-us/library/aa964928.aspx
+</td>
+</tr>
+<tr><td><p>[10]</p></td>
+<td>MSDN. LoadLibrary Function (Windows). [Online]. 
+http://msdn.microsoft.com/en-us/library/windows/desktop/ms684175(v=vs.85).aspx
+</td>
+</tr>
+<tr><td>[11]</td>
+<td>Linux Man Pages. ld.so(8). [Online]. 
+http://linux.die.net/man/8/ld.so
+</td>
+</tr>
+<tr><td>[12]</td>
+<td>GCC Documentation. Function Attributes. [Online]. 
+http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
+</td>
+</tr>
+<tr><td><p>[13]</p></td>
+<td>mlg. Cross-Platform x86-64 Detours. [Online]. 
+http://www.gamedeception.net/threads/21965-Cross-platform-x86-detours
+</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<div>
+
+
+<table><tbody><tr><td>Gillis Van Ginderachter – Cross-Platform Tibia Bot API</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+<div><p>[1]
+&nbsp;There is one thing you might need to know about Windows DLLs. When a DLL is mapped into a process, the function 
+DllMain
+&nbsp;- which is defined in the DLL - is called.</p>
+</div>
+</li></div>
+
+</section>
+
+</div>
+
+</body>
 </html>
